@@ -2,9 +2,10 @@ export type Product = {
   id: string;
   name: string;
   price: number;
-  category: "Vestidos" | "Blusas";
+  category: "Tops" | "Vestidos" | "Saias" | "Conjuntos";
   image: string;
   stock: number;
+  tag?: string;
 };
 
 export const formatBRL = (value: number) =>
@@ -13,56 +14,60 @@ export const formatBRL = (value: number) =>
 export const products: Product[] = [
   {
     id: "p1",
-    name: "Vestido Midi Seda",
-    price: 489.0,
-    category: "Vestidos",
+    name: "Cropped Borboleta",
+    price: 89.9,
+    category: "Tops",
     image:
-      "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=800&q=80",
-    stock: 12,
+      "https://images.unsplash.com/photo-1564859228273-274232fdb516?auto=format&fit=crop&w=800&q=80",
+    stock: 24,
+    tag: "Trend",
   },
   {
     id: "p2",
-    name: "Blusa Tricot Manga Longa",
-    price: 259.9,
-    category: "Blusas",
+    name: "Saia Plissada Rosa",
+    price: 129.9,
+    category: "Saias",
     image:
-      "https://images.unsplash.com/photo-1551489186-cf8726f514f8?auto=format&fit=crop&w=800&q=80",
-    stock: 24,
+      "https://images.unsplash.com/photo-1577900232427-18219b9166a0?auto=format&fit=crop&w=800&q=80",
+    stock: 18,
+    tag: "Novo",
   },
   {
     id: "p3",
-    name: "Vestido Longo Linho",
-    price: 599.0,
+    name: "Vestido Floral Aesthetic",
+    price: 189.9,
     category: "Vestidos",
     image:
       "https://images.unsplash.com/photo-1572804013427-4d7ca7268217?auto=format&fit=crop&w=800&q=80",
-    stock: 8,
+    stock: 9,
+    tag: "Hot",
   },
   {
     id: "p4",
-    name: "Blusa Cetim Off-White",
-    price: 319.0,
-    category: "Blusas",
+    name: "Conjunto Tricot Pastel",
+    price: 219.0,
+    category: "Conjuntos",
     image:
-      "https://images.unsplash.com/photo-1564257577-2d3ee8740ba0?auto=format&fit=crop&w=800&q=80",
-    stock: 16,
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+    stock: 14,
   },
   {
     id: "p5",
-    name: "Vestido Plissado Nude",
-    price: 549.0,
-    category: "Vestidos",
+    name: "Top Coquette Laço",
+    price: 79.9,
+    category: "Tops",
     image:
-      "https://images.unsplash.com/photo-1623609163859-ca93c959b98a?auto=format&fit=crop&w=800&q=80",
-    stock: 6,
+      "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=800&q=80",
+    stock: 31,
+    tag: "Trend",
   },
   {
     id: "p6",
-    name: "Blusa Linho Bordada",
-    price: 289.0,
-    category: "Blusas",
+    name: "Vestido Midi Cottage",
+    price: 169.9,
+    category: "Vestidos",
     image:
-      "https://images.unsplash.com/photo-1485518882345-15568b007407?auto=format&fit=crop&w=800&q=80",
-    stock: 19,
+      "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=80",
+    stock: 7,
   },
 ];
