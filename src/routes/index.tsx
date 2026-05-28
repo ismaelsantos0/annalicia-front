@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Sparkles, Truck, Gift } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { CartDrawer } from "../components/CartDrawer";
@@ -8,11 +9,11 @@ import { products } from "../lib/products";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Boutique Eleganza — Nova Coleção Outono" },
+      { title: "Annalicia Modas — Coleção Primavera" },
       {
         name: "description",
         content:
-          "Moda feminina elegante e atemporal. Descubra a nova coleção outono da Boutique Eleganza.",
+          "Moda jovem aesthetic. Looks coquette, vestidos floral e tops fofos para você ser você mesma.",
       },
     ],
   }),
@@ -20,73 +21,108 @@ export const Route = createFileRoute("/")({
 });
 
 function Storefront() {
-  const vestidos = products.filter((p) => p.category === "Vestidos");
-  const blusas = products.filter((p) => p.category === "Blusas");
-
   return (
     <div className="min-h-screen">
       <Navbar />
       <CartDrawer />
 
       {/* Hero */}
-      <section className="relative">
-        <div className="grid lg:grid-cols-2">
-          <div className="flex flex-col justify-center px-6 py-20 sm:px-10 lg:px-16 lg:py-32">
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              Edição Outono 2026
-            </p>
-            <h1 className="mt-4 font-serif text-5xl leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
-              Nova Coleção <em className="not-italic block text-accent">Outono</em>
+      <section className="relative overflow-hidden">
+        <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-pink-200/50 blur-3xl" />
+        <div className="absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-emerald-100 blur-3xl" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8 lg:py-24">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-mint px-3 py-1 text-xs font-semibold text-emerald-700">
+              <Sparkles className="h-3 w-3" />
+              Drop de primavera ✨
+            </span>
+            <h1 className="mt-5 font-display text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
+              Coleção Primavera:{" "}
+              <span className="text-primary">Seja Você Mesma!</span>
             </h1>
-            <p className="mt-6 max-w-md text-base text-muted-foreground">
-              Peças atemporais, tecidos nobres e silhuetas que celebram a
-              feminilidade discreta. Vista o seu próximo capítulo.
+            <p className="mt-5 max-w-md text-base text-muted-foreground">
+              Looks fofos, coquette e cheios de personalidade pra você arrasar
+              em qualquer rolê. Encontre a peça que combina com a sua vibe. 💕
             </p>
-            <div className="mt-10">
+            <div className="mt-8 flex flex-wrap items-center gap-4">
               <a
-                href="#vitrine"
-                className="inline-block bg-primary px-10 py-4 text-xs uppercase tracking-[0.3em] text-primary-foreground transition hover:opacity-90"
+                href="#looks"
+                className="rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground shadow-[0_15px_30px_-10px_rgba(236,72,153,0.55)] transition hover:scale-105"
               >
-                Ver Peças
+                Ver Looks
+              </a>
+              <a
+                href="#novidades"
+                className="rounded-full border-2 border-primary/20 bg-white px-6 py-3.5 text-sm font-semibold text-primary transition hover:bg-pink-50"
+              >
+                Novidades
               </a>
             </div>
+            <div className="mt-10 flex flex-wrap gap-6 text-xs text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <Truck className="h-4 w-4 text-primary" /> Frete grátis acima de R$ 199
+              </span>
+              <span className="flex items-center gap-2">
+                <Gift className="h-4 w-4 text-primary" /> Brinde fofo no pedido
+              </span>
+            </div>
           </div>
-          <div className="relative aspect-[4/5] lg:aspect-auto">
-            <img
-              src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=80"
-              alt="Modelo vestindo peça da coleção outono"
-              className="h-full w-full object-cover"
-            />
+          <div className="relative">
+            <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-pink-200 via-pink-100 to-emerald-100 blur-2xl" />
+            <div className="relative overflow-hidden rounded-[2.5rem] shadow-[0_30px_60px_-20px_rgba(236,72,153,0.4)]">
+              <img
+                src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80"
+                alt="Modelo com look da coleção primavera"
+                className="aspect-[4/5] w-full object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white px-4 py-3 shadow-lg">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Best seller
+              </p>
+              <p className="font-display text-primary">+1.2k vendidos 💖</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Vitrine */}
-      <section id="vitrine" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div id="vestidos" className="mb-12 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-            Vestidos
-          </p>
-          <h2 className="mt-3 font-serif text-3xl sm:text-4xl">
-            Silhuetas da estação
-          </h2>
+      {/* Looks */}
+      <section
+        id="looks"
+        className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
+      >
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+              Vitrine
+            </p>
+            <h2 className="mt-2 font-display text-3xl sm:text-4xl">
+              Looks que tão bombando 🌸
+            </h2>
+          </div>
+          <a
+            href="#novidades"
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Ver tudo →
+          </a>
         </div>
-        <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {vestidos.map((p) => (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {products.slice(0, 3).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
 
-        <div id="blusas" className="mb-12 mt-24 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-            Blusas
+        <div id="novidades" className="mt-20 mb-10">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+            Acabou de chegar
           </p>
-          <h2 className="mt-3 font-serif text-3xl sm:text-4xl">
-            Essenciais elegantes
+          <h2 className="mt-2 font-display text-3xl sm:text-4xl">
+            Novidades fresquinhas ✨
           </h2>
         </div>
-        <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {blusas.map((p) => (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {products.slice(3).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
