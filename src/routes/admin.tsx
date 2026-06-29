@@ -859,7 +859,7 @@ function ConfiguracoesPanel({ token }: { token: string }) {
             className="mt-6 space-y-4"
           >
             <div>
-              <label className="mb-1 block text-sm font-semibold text-red-600">Estoque Crítico (<=)</label>
+              <label className="mb-1 block text-sm font-semibold text-red-600">Estoque Crítico (&lt;=)</label>
               <input
                 type="number"
                 min="0"
@@ -871,7 +871,7 @@ function ConfiguracoesPanel({ token }: { token: string }) {
             </div>
             
             <div>
-              <label className="mb-1 block text-sm font-semibold text-yellow-600">Estoque Atenção (<=)</label>
+              <label className="mb-1 block text-sm font-semibold text-yellow-600">Estoque Atenção (&lt;=)</label>
               <input
                 type="number"
                 min="0"
