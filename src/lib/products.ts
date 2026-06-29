@@ -6,6 +6,7 @@ export type Product = {
   images: string[];
   stock: number;
   tag?: string;
+  isNew?: boolean;
 };
 
 export const formatBRL = (value: number) =>

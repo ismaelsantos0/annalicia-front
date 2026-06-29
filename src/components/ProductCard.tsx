@@ -21,11 +21,15 @@ export function ProductCard({ product }: { product: Product }) {
             className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
           />
         )}
-        {product.tag && (
+        {product.isNew ? (
+          <span className="absolute left-3 top-3 rounded-full bg-red-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md flex items-center gap-1">
+            🔥 Novo
+          </span>
+        ) : product.tag ? (
           <span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
             {product.tag}
           </span>
-        )}
+        ) : null}
         <button
           aria-label="Favoritar"
           className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-primary backdrop-blur transition hover:bg-white hover:scale-110"

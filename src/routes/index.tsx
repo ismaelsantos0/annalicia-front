@@ -37,7 +37,9 @@ function Storefront() {
 
   const filteredProducts = activeCategory === "Todos" 
     ? products 
-    : products.filter(p => p.category === activeCategory);
+    : activeCategory === "Novidades"
+      ? products.filter(p => p.isNew)
+      : products.filter(p => p.category === activeCategory);
 
   const { data: banners = [] } = useQuery({
     queryKey: ["banners"],
@@ -214,6 +216,16 @@ function Storefront() {
             }`}
           >
             Todos
+          </button>
+          <button
+            onClick={() => setActiveCategory("Novidades")}
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition flex items-center gap-1 ${
+              activeCategory === "Novidades"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "bg-pink-50 text-foreground hover:bg-pink-100 hover:text-primary"
+            }`}
+          >
+            🔥 Novidades
           </button>
           {categorias.map((cat: any) => (
             <button
