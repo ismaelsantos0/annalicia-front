@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { CartProvider } from "../lib/cart-context";
+import { CustomersProvider } from "../lib/customers-context";
 
 function NotFoundComponent() {
   return (
