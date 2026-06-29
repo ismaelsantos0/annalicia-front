@@ -676,31 +676,20 @@ function MarketingPanel({ token }: { token: string }) {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-3xl bg-white shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-pink-50/50 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              <tr>
-                <th className="px-6 py-3">Cliente</th>
-                <th className="px-6 py-3">WhatsApp</th>
-                <th className="px-6 py-3">Endereço</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr><td colSpan={3} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
-              ) : customers.length === 0 ? (
-                <tr><td colSpan={3} className="p-6 text-center text-muted-foreground">Nenhum cliente ainda.</td></tr>
-              ) : customers.map((c: any) => (
-                <tr key={c.id} className="border-t border-pink-50">
-                  <td className="px-6 py-4 font-display">{c.nome}</td>
-                  <td className="px-6 py-4 text-muted-foreground">{c.whatsapp}</td>
-                  <td className="px-6 py-4 text-xs text-muted-foreground">{c.endereco}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="overflow-hidden rounded-3xl bg-white p-8 text-center shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
+        <h3 className="font-display text-lg text-muted-foreground">Base de Clientes (Disparo)</h3>
+        {isLoading ? (
+          <p className="mt-4 text-2xl font-bold text-primary animate-pulse">Carregando...</p>
+        ) : (
+          <>
+            <p className="mt-4 text-6xl font-display text-primary">
+              {new Set(customers.filter((c: any) => c.whatsapp && c.whatsapp.length >= 10).map((c: any) => c.whatsapp)).size}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              números de WhatsApp válidos e únicos prontos para receber suas campanhas.
+            </p>
+          </>
+        )}
       </div>
     </>
   );
