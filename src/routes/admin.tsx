@@ -17,6 +17,8 @@ import {
   MessageCircle,
   CreditCard,
   X,
+  Plus,
+  Minus,
 } from "lucide-react";
 import Cropper from "react-easy-crop";
 import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista } from "../lib/api";
@@ -1240,7 +1242,25 @@ function PagamentosPanel({ token }: { token: string }) {
                 zonas.map((z: any) => (
                   <tr key={z.id} className="border-b border-pink-50 last:border-0 group">
                     <td className="py-3 font-medium text-foreground/80">{z.bairro}</td>
-                    <td className="py-3">{formatBRL(z.taxa)}</td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => updateZonaMutation.mutate({ id: z.id, taxa: Math.max(0, z.taxa - 1) })}
+                          className="grid h-6 w-6 place-items-center rounded-full bg-pink-100 text-pink-600 hover:bg-pink-200 transition"
+                          title="Diminuir R$ 1,00"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="w-16 text-center font-medium">{formatBRL(z.taxa)}</span>
+                        <button 
+                          onClick={() => updateZonaMutation.mutate({ id: z.id, taxa: z.taxa + 1 })}
+                          className="grid h-6 w-6 place-items-center rounded-full bg-pink-100 text-pink-600 hover:bg-pink-200 transition"
+                          title="Aumentar R$ 1,00"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </td>
                     <td className="py-3 text-center">
                       <button 
                         onClick={() => updateZonaMutation.mutate({ id: z.id, ativo: !z.ativo })}
