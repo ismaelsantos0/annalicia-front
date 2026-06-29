@@ -35,6 +35,19 @@ function Storefront() {
 
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
 
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === '#novidades') {
+        setActiveCategory("Novidades");
+      } else if (window.location.hash === '#looks') {
+        setActiveCategory("Todos");
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    handleHash();
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
   const filteredProducts = activeCategory === "Todos" 
     ? products 
     : activeCategory === "Novidades"
@@ -184,6 +197,7 @@ function Storefront() {
       </section>
 
       {/* Looks */}
+      <div id="novidades" className="absolute -translate-y-24" />
       <section
         id="looks"
         className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
@@ -217,16 +231,6 @@ function Storefront() {
           >
             Todos
           </button>
-          <button
-            onClick={() => setActiveCategory("Novidades")}
-            className={`rounded-full px-5 py-2 text-sm font-semibold transition flex items-center gap-1 ${
-              activeCategory === "Novidades"
-                ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-pink-50 text-foreground hover:bg-pink-100 hover:text-primary"
-            }`}
-          >
-            🔥 Novidades
-          </button>
           {categorias.map((cat: any) => (
             <button
               key={cat.id}
@@ -255,7 +259,7 @@ function Storefront() {
         </div>
 
         {filteredProducts.length > 3 && (
-          <div id="novidades" className="mt-20 mb-10">
+          <div className="mt-20 mb-10">
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">
               Tem mais
             </p>
