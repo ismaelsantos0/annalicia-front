@@ -5,7 +5,7 @@ import { Footer } from "../components/Footer";
 import { CartDrawer } from "../components/CartDrawer";
 import { ProductCard } from "../components/ProductCard";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProdutos, fetchCategorias } from "../lib/api";
+import { fetchProdutos, fetchCategorias, fetchBanners } from "../lib/api";
 import { useState, useEffect } from "react";
 import type { Product } from "../lib/products";
 
