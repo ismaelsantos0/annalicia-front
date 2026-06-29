@@ -174,11 +174,20 @@ function CheckoutPage() {
           </div>
 
           <p className="text-sm text-muted-foreground mb-8">
-            Em instantes você receberá os detalhes no seu WhatsApp.
+            Copie o código acima e realize o pagamento no seu banco.
           </p>
+          <a
+            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_LOJA || "5595991475736"}?text=${encodeURIComponent(`Olá! Acabei de fazer o pagamento do pedido #${successData.id.split('-')[0]}. Segue o comprovante:`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full bg-green-500 w-full py-4 text-sm font-semibold text-white shadow-md hover:bg-green-600 transition-colors flex items-center justify-center gap-2 mb-4"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Enviar Comprovante no WhatsApp
+          </a>
           <Link
             to="/"
-            className="rounded-full bg-primary w-full py-4 text-sm font-semibold text-primary-foreground shadow-md hover:opacity-90 transition-opacity"
+            className="rounded-full bg-pink-100 w-full py-4 text-sm font-semibold text-pink-800 shadow-sm hover:bg-pink-200 transition-colors"
           >
             Continuar comprando
           </Link>
