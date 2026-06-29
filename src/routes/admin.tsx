@@ -45,7 +45,7 @@ function AdminDashboard() {
       localStorage.setItem("admin_token", data.access_token);
       setToken(data.access_token);
     },
-    onError: () => alert("Credenciais inválidas")
+    onError: (error) => alert(error.message || "Erro ao fazer login")
   });
 
   if (!token) {
