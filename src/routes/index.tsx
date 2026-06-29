@@ -129,15 +129,27 @@ function Storefront() {
             </div>
             
             {activeBanners.length > 1 && (
-              <div className="mt-8 flex gap-2">
-                {activeBanners.map((_: any, idx: number) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentBannerIndex(idx)}
-                    style={{ backgroundColor: idx === currentBannerIndex ? (currentBanner.cor_destaque || "#ec4899") : "#fbcfe8" }}
-                    className={`h-2 rounded-full transition-all ${idx === currentBannerIndex ? 'w-8' : 'w-2 hover:opacity-80'}`}
-                  />
-                ))}
+              <div className="mt-8 flex items-center gap-3">
+                {activeBanners.map((banner: any, idx: number) => {
+                  const isActive = idx === currentBannerIndex;
+                  const dotColor = banner.cor_destaque || "#ec4899";
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentBannerIndex(idx)}
+                      className={`group relative flex h-3 transition-all duration-300 ${isActive ? 'w-10' : 'w-3 hover:w-5'}`}
+                      aria-label={`Ir para o banner ${idx + 1}`}
+                    >
+                      <span 
+                        className="absolute inset-0 rounded-full transition-all duration-300"
+                        style={{ 
+                          backgroundColor: isActive ? dotColor : '#fbcfe8',
+                          opacity: isActive ? 1 : 0.6
+                        }}
+                      />
+                    </button>
+                  );
+                })}
               </div>
             )}
 
