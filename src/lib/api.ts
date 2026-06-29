@@ -183,6 +183,22 @@ export async function fetchPedidosAdmin(token: string) {
   return res.json();
 }
 
+export async function updateOrderStatus(token: string, id: string, status: string) {
+  const res = await fetch(`${API_URL}/pedidos/${id}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ status })
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.detail || "Falha ao atualizar status do pedido");
+  }
+  return res.json();
+}
+
 export async function loginAdmin(username: string, password: string) {
   const params = new URLSearchParams();
   params.append("username", username.trim().toLowerCase());

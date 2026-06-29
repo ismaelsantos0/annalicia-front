@@ -25,7 +25,7 @@ import {
   PieChart
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -535,10 +535,32 @@ function ProductsPanel({ token }: { token: string }) {
 }
 
 function OrdersPanel({ token }: { token: string }) {
+  const queryClient = useQueryClient();
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["pedidos"],
     queryFn: () => fetchPedidosAdmin(token),
   });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string, status: string }) => updateOrderStatus(token, id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+    onError: (e: any) => {
+      alert("Erro ao atualizar status: " + e.message);
+    }
+  });
+
+  const handleStatusChange = (id: string, currentStatus: string, newStatus: string) => {
+    if (currentStatus === "cancelado" || currentStatus === "entregue") {
+      alert(`Não é possível alterar um pedido ${currentStatus}`);
+      return;
+    }
+    if (newStatus === "cancelado") {
+      if (!confirm("Tem certeza que deseja cancelar este pedido? O estoque será devolvido.")) return;
+    }
+    statusMutation.mutate({ id, status: newStatus });
+  };
 
   return (
     <>
@@ -554,21 +576,46 @@ function OrdersPanel({ token }: { token: string }) {
               <tr>
                 <th className="px-6 py-3">Pedido ID</th>
                 <th className="px-6 py-3">Cliente</th>
-                <th className="px-6 py-3">WhatsApp</th>
+                <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3">Total</th>
+                <th className="px-6 py-3">Ações</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
               ) : orders.length === 0 ? (
-                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Nenhum pedido ainda.</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Nenhum pedido ainda.</td></tr>
               ) : orders.map((o: any) => (
                 <tr key={o.id} className="border-t border-pink-50 hover:bg-pink-50/40">
                   <td className="px-6 py-4 font-mono text-xs">#{o.numero ? String(o.numero).padStart(4, '0') : o.id.split('-')[0]}</td>
-                  <td className="px-6 py-4 font-display">{o.cliente?.nome}</td>
-                  <td className="px-6 py-4 text-muted-foreground">{o.cliente?.whatsapp}</td>
+                  <td className="px-6 py-4 font-display">{o.cliente?.nome}<br/><span className="text-xs text-muted-foreground">{o.cliente?.whatsapp}</span></td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold
+                      ${o.status === 'pendente' ? 'bg-yellow-100 text-yellow-700' :
+                        o.status === 'confirmado' ? 'bg-blue-100 text-blue-700' :
+                        o.status === 'enviado' ? 'bg-purple-100 text-purple-700' :
+                        o.status === 'entregue' ? 'bg-green-100 text-green-700' :
+                        'bg-red-100 text-red-700'}`}>
+                      {o.status.toUpperCase()}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 font-semibold text-primary">{formatBRL(o.total)}</td>
+                  <td className="px-6 py-4">
+                    {o.status !== 'cancelado' && o.status !== 'entregue' && (
+                      <select 
+                        value={o.status}
+                        onChange={(e) => handleStatusChange(o.id, o.status, e.target.value)}
+                        className="rounded-xl border border-pink-100 bg-pink-50/30 px-3 py-1 text-xs focus:border-primary focus:outline-none"
+                      >
+                        <option value="pendente">Pendente</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="enviado">Enviado</option>
+                        <option value="entregue">Entregue</option>
+                        <option value="cancelado">Cancelado</option>
+                      </select>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
