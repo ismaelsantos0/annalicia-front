@@ -13,21 +13,7 @@ import appCss from "../styles.css?url";
 import { CartProvider } from "../lib/cart-context";
 import { CustomersProvider } from "../lib/customers-context";
 
-/** URL do PWA exclusivo para iOS */
-const IOS_PWA_URL = "https://annalicia-modas-admin.up.railway.app";
 
-/**
- * Detecta iPhone, iPad (iOS 13+ reporta-se como "Mac" com touch),
- * iPod e quaisquer outros dispositivos rodando iOS/iPadOS.
- */
-function isIOS(): boolean {
-  const ua = navigator.userAgent;
-  // Detecção clássica (iPhone/iPod/iPad antigo)
-  if (/iphone|ipod|ipad/i.test(ua)) return true;
-  // iPad iOS 13+ se reporta como MacIntel mas tem touchpoints
-  if (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return true;
-  return false;
-}
 
 function NotFoundComponent() {
   return (
@@ -135,12 +121,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
-  // 🍎 Redireciona qualquer dispositivo iOS para o PWA exclusivo
-  useEffect(() => {
-    if (isIOS()) {
-      window.location.replace(IOS_PWA_URL);
-    }
-  }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -30,6 +30,20 @@ import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, log
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
+/** URL do PWA exclusivo para iOS */
+const IOS_PWA_URL = "https://annalicia-modas-admin.up.railway.app";
+
+/**
+ * Detecta iPhone, iPad (iOS 13+ reporta-se como "Mac" com touch),
+ * iPod e quaisquer outros dispositivos rodando iOS/iPadOS.
+ */
+function isIOS(): boolean {
+  const ua = navigator.userAgent;
+  if (/iphone|ipod|ipad/i.test(ua)) return true;
+  if (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return true;
+  return false;
+}
+
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [{ title: "Painel Admin — Annalicia Modas" }],
@@ -58,6 +72,13 @@ function AdminDashboard() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [tab, setTab] = useState<Tab>("dashboard");
+
+  // 🍎 Redireciona iOS para o PWA exclusivo apenas no Admin
+  useEffect(() => {
+    if (isIOS()) {
+      window.location.replace(IOS_PWA_URL);
+    }
+  }, []);
   const [isVerifying, setIsVerifying] = useState(!!token);
 
   useEffect(() => {
