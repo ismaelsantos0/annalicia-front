@@ -26,7 +26,7 @@ import {
   Star
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats, enviarDisparo, toggleDestaqueProduto } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, loginAdmin, createProduto, deleteProduto, updateProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats, enviarDisparo, toggleDestaqueProduto } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -176,11 +176,13 @@ function AdminDashboard() {
 
 function ProductsPanel({ token }: { token: string }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState<any>(null); // null = creating, objeto = editing
   const [nome, setNome] = useState("");
   const [precoCusto, setPrecoCusto] = useState("");
   const [preco, setPreco] = useState("");
   const [estoque, setEstoque] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
+  const [descricao, setDescricao] = useState("");
   const [novaCategoria, setNovaCategoria] = useState("");
   
   // Imagens
@@ -203,21 +205,34 @@ function ProductsPanel({ token }: { token: string }) {
   });
 
   const mutation = useMutation({
-    mutationFn: () => createProduto(token, {
-      nome,
-      preco_custo: parseFloat(precoCusto.replace(",", ".") || "0"),
-      preco: parseFloat(preco.replace(",", ".")),
-      estoque: parseInt(estoque, 10),
-      categoria_id: (categoriaId && categoriaId !== "new") ? categoriaId : undefined,
-      imagem_url: imagens.length > 0 ? JSON.stringify(imagens) : "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
-    }),
+    mutationFn: () => editProduct
+      ? updateProduto(token, editProduct.id, {
+          nome,
+          preco_custo: parseFloat(precoCusto.replace(",", ".") || "0"),
+          preco: parseFloat(preco.replace(",", ".")),
+          estoque: parseInt(estoque, 10),
+          categoria_id: (categoriaId && categoriaId !== "new") ? categoriaId : null,
+          imagem_url: imagens.length > 0 ? JSON.stringify(imagens) : editProduct.images?.length > 0 ? JSON.stringify(editProduct.images) : undefined,
+          descricao,
+        })
+      : createProduto(token, {
+          nome,
+          preco_custo: parseFloat(precoCusto.replace(",", ".") || "0"),
+          preco: parseFloat(preco.replace(",", ".")),
+          estoque: parseInt(estoque, 10),
+          categoria_id: (categoriaId && categoriaId !== "new") ? categoriaId : undefined,
+          imagem_url: imagens.length > 0 ? JSON.stringify(imagens) : "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
+        }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["produtos"] });
+      queryClient.invalidateQueries({ queryKey: ["destaques"] });
       setModalOpen(false);
+      setEditProduct(null);
       setNome("");
       setPrecoCusto("");
       setPreco("");
       setEstoque("");
+      setDescricao("");
       setImagens([]);
       alert("Produto salvo com sucesso!");
     },
@@ -352,7 +367,24 @@ function ProductsPanel({ token }: { token: string }) {
                       <Star className="h-5 w-5" fill={p.destaque ? "currentColor" : "none"} />
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        setEditProduct(p);
+                        setNome(p.name);
+                        setPrecoCusto(String(p.preco_custo || ""));
+                        setPreco(String(p.price));
+                        setEstoque(String(p.stock));
+                        setCategoriaId(p.categoria_id || "");
+                        setDescricao(p.descricao || "");
+                        setImagens(p.images || []);
+                        setModalOpen(true);
+                      }}
+                      className="text-muted-foreground hover:text-primary transition"
+                      title="Editar"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </button>
                     <button
                       onClick={() => {
                         if (confirm(`Deletar o produto ${p.name}?`)) {
@@ -374,10 +406,12 @@ function ProductsPanel({ token }: { token: string }) {
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="font-display text-xl text-primary">Nova Peça ✨</h2>
-              <button onClick={() => setModalOpen(false)} className="rounded-full bg-pink-50 p-2 text-primary hover:bg-pink-100">
+              <h2 className="font-display text-xl text-primary">
+                {editProduct ? "Editar Peça ✏️" : "Nova Peça ✨"}
+              </h2>
+              <button onClick={() => { setModalOpen(false); setEditProduct(null); setNome(""); setPrecoCusto(""); setPreco(""); setEstoque(""); setDescricao(""); setImagens([]); }} className="rounded-full bg-pink-50 p-2 text-primary hover:bg-pink-100">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -423,6 +457,10 @@ function ProductsPanel({ token }: { token: string }) {
                   </div>
                 </div>
               )}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground/80">Descrição (opcional)</label>
+                <textarea value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Ex: Tecido leve, modelagem soltinha..." rows={2} className="w-full rounded-xl border border-pink-100 p-3 text-sm outline-none focus:border-primary resize-none" />
+              </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Categoria</label>
                 <div className="flex gap-2">

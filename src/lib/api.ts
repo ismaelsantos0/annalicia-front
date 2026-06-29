@@ -66,6 +66,30 @@ export async function deleteProduto(token: string, id: string) {
   return true;
 }
 
+export async function updateProduto(token: string, id: string, dados: {
+  nome?: string;
+  preco_custo?: number;
+  preco?: number;
+  estoque?: number;
+  imagem_url?: string;
+  categoria_id?: string | null;
+  descricao?: string;
+}) {
+  const res = await fetch(`${API_URL}/produtos/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Falha ao atualizar produto");
+  }
+  return res.json();
+}
+
 export async function updateEstoqueProduto(token: string, id: string, estoque: number) {
   const res = await fetch(`${API_URL}/produtos/${id}/estoque`, {
     method: "PATCH",
