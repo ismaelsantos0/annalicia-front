@@ -5,7 +5,8 @@ import { Footer } from "../components/Footer";
 import { CartDrawer } from "../components/CartDrawer";
 import { ProductCard } from "../components/ProductCard";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProdutos } from "../lib/api";
+import { fetchProdutos, fetchCategorias } from "../lib/api";
+import { useState } from "react";
 import type { Product } from "../lib/products";
 
 export const Route = createFileRoute("/")({
@@ -27,6 +28,16 @@ function Storefront() {
     queryKey: ["produtos"],
     queryFn: fetchProdutos,
   });
+  const { data: categorias = [] } = useQuery({
+    queryKey: ["categorias"],
+    queryFn: fetchCategorias,
+  });
+
+  const [activeCategory, setActiveCategory] = useState<string>("Todos");
+
+  const filteredProducts = activeCategory === "Todos" 
+    ? products 
+    : products.filter(p => p.category === activeCategory);
 
   return (
     <div className="min-h-screen">
@@ -114,33 +125,63 @@ function Storefront() {
             Ver tudo →
           </a>
         </div>
+
+        {/* Categorias Filtro */}
+        <div className="mb-10 flex flex-wrap gap-3">
+          <button
+            onClick={() => setActiveCategory("Todos")}
+            className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+              activeCategory === "Todos"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "bg-pink-50 text-foreground hover:bg-pink-100 hover:text-primary"
+            }`}
+          >
+            Todos
+          </button>
+          {categorias.map((cat: any) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.nome)}
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                activeCategory === cat.nome
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-pink-50 text-foreground hover:bg-pink-100 hover:text-primary"
+              }`}
+            >
+              {cat.nome}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {isLoading ? (
             <p className="text-muted-foreground">Carregando looks...</p>
+          ) : filteredProducts.length === 0 ? (
+            <p className="text-muted-foreground">Nenhum look nessa categoria ainda.</p>
           ) : (
-            products.slice(0, 3).map((p) => (
+            filteredProducts.slice(0, 3).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))
           )}
         </div>
 
-        <div id="novidades" className="mt-20 mb-10">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Acabou de chegar
-          </p>
-          <h2 className="mt-2 font-display text-3xl sm:text-4xl">
-            Novidades fresquinhas ✨
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            <p className="text-muted-foreground">Carregando...</p>
-          ) : (
-            products.slice(3).map((p) => (
+        {filteredProducts.length > 3 && (
+          <div id="novidades" className="mt-20 mb-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+              Tem mais
+            </p>
+            <h2 className="mt-2 font-display text-3xl sm:text-4xl">
+              Descubra {activeCategory !== "Todos" ? activeCategory : "Mais Looks"} ✨
+            </h2>
+          </div>
+        )}
+        {filteredProducts.length > 3 && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredProducts.slice(3).map((p) => (
               <ProductCard key={p.id} product={p} />
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <Footer />

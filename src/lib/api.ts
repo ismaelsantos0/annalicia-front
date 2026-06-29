@@ -16,7 +16,8 @@ export async function fetchProdutos() {
       id: p.id,
       name: p.nome,
       price: p.preco,
-      category: "Geral",
+      category: p.categoria ? p.categoria.nome : "Geral",
+      categoria_id: p.categoria_id,
       images: parsedImages,
       stock: p.estoque,
     };
@@ -28,6 +29,7 @@ export async function createProduto(token: string, dados: {
   preco: number;
   estoque: number;
   imagem_url: string;
+  categoria_id?: string;
 }) {
   const res = await fetch(`${API_URL}/produtos`, {
     method: "POST",
@@ -42,6 +44,43 @@ export async function createProduto(token: string, dados: {
     throw new Error(err.detail || "Falha ao criar produto");
   }
   return res.json();
+}
+
+export async function deleteProduto(token: string, id: string) {
+  const res = await fetch(`${API_URL}/produtos/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Falha ao deletar produto");
+  return true;
+}
+
+export async function fetchCategorias() {
+  const res = await fetch(`${API_URL}/categorias`);
+  if (!res.ok) throw new Error("Falha ao buscar categorias");
+  return res.json();
+}
+
+export async function createCategoria(token: string, nome: string) {
+  const res = await fetch(`${API_URL}/categorias`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ nome }),
+  });
+  if (!res.ok) throw new Error("Falha ao criar categoria");
+  return res.json();
+}
+
+export async function deleteCategoria(token: string, id: string) {
+  const res = await fetch(`${API_URL}/categorias/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Falha ao deletar categoria");
+  return true;
 }
 
 export async function createPedido(dados: {

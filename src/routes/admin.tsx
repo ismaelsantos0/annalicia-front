@@ -16,7 +16,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -27,10 +27,11 @@ export const Route = createFileRoute("/admin")({
   component: AdminDashboard,
 });
 
-type Tab = "produtos" | "estoque" | "pedidos" | "marketing";
+type Tab = "produtos" | "categorias" | "estoque" | "pedidos" | "marketing";
 
 const navItems = [
   { id: "produtos" as Tab, label: "Produtos", icon: Shirt },
+  { id: "categorias" as Tab, label: "Categorias", icon: Boxes },
   { id: "estoque" as Tab, label: "Estoque", icon: Boxes },
   { id: "pedidos" as Tab, label: "Pedidos", icon: Receipt },
   { id: "marketing" as Tab, label: "Marketing", icon: Megaphone },
@@ -151,6 +152,8 @@ function AdminDashboard() {
           <OrdersPanel token={token} />
         ) : tab === "marketing" ? (
           <MarketingPanel token={token} />
+        ) : tab === "categorias" ? (
+          <CategoriasPanel token={token} />
         ) : (
           <ProductsPanel token={token} />
         )}
@@ -164,6 +167,8 @@ function ProductsPanel({ token }: { token: string }) {
   const [nome, setNome] = useState("");
   const [preco, setPreco] = useState("");
   const [estoque, setEstoque] = useState("");
+  const [categoriaId, setCategoriaId] = useState("");
+  const [novaCategoria, setNovaCategoria] = useState("");
   
   // Imagens
   const [imagens, setImagens] = useState<string[]>([]);
@@ -179,11 +184,17 @@ function ProductsPanel({ token }: { token: string }) {
     queryFn: fetchProdutos,
   });
 
+  const { data: categorias = [] } = useQuery({
+    queryKey: ["categorias"],
+    queryFn: fetchCategorias,
+  });
+
   const mutation = useMutation({
     mutationFn: () => createProduto(token, {
       nome,
       preco: parseFloat(preco.replace(",", ".")),
       estoque: parseInt(estoque, 10),
+      categoria_id: categoriaId || undefined,
       imagem_url: imagens.length > 0 ? JSON.stringify(imagens) : "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
     }),
     onSuccess: () => {
@@ -248,6 +259,26 @@ function ProductsPanel({ token }: { token: string }) {
     }
   };
 
+  const deleteProdMutation = useMutation({
+    mutationFn: (id: string) => deleteProduto(token, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["produtos"] });
+      alert("Produto deletado com sucesso!");
+    },
+    onError: (e) => alert(e.message)
+  });
+
+  const createCatMutation = useMutation({
+    mutationFn: (nome: string) => createCategoria(token, nome),
+    onSuccess: (novaCat) => {
+      queryClient.invalidateQueries({ queryKey: ["categorias"] });
+      setCategoriaId(novaCat.id);
+      setNovaCategoria("");
+      alert("Categoria criada com sucesso!");
+    },
+    onError: (e) => alert(e.message)
+  });
+
   return (
     <>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -272,7 +303,9 @@ function ProductsPanel({ token }: { token: string }) {
                 <th className="px-6 py-3 font-semibold">Foto</th>
                 <th className="px-6 py-3 font-semibold">Nome</th>
                 <th className="px-6 py-3 font-semibold">Preço</th>
+                <th className="px-6 py-3 font-semibold">Categoria</th>
                 <th className="px-6 py-3 font-semibold">Estoque</th>
+                <th className="px-6 py-3 font-semibold"></th>
               </tr>
             </thead>
             <tbody>
@@ -286,9 +319,27 @@ function ProductsPanel({ token }: { token: string }) {
                   <td className="px-6 py-4 font-display text-base">{p.name}</td>
                   <td className="px-6 py-4 font-semibold text-primary">{formatBRL(p.price)}</td>
                   <td className="px-6 py-4">
+                    <span className="inline-flex items-center rounded-full bg-pink-100/50 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                      {p.category}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
                     <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${p.stock < 10 ? "bg-pink-100 text-primary" : "bg-mint text-emerald-700"}`}>
                       {p.stock} un.
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => {
+                        if (confirm(`Deletar o produto ${p.name}?`)) {
+                          deleteProdMutation.mutate(p.id);
+                        }
+                      }}
+                      className="text-muted-foreground hover:text-red-500 transition"
+                      title="Deletar"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -321,6 +372,54 @@ function ProductsPanel({ token }: { token: string }) {
                   <input required type="number" value={estoque} onChange={e => setEstoque(e.target.value)} placeholder="0" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
                 </div>
               </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground/80">Categoria</label>
+                <div className="flex gap-2">
+                  <select 
+                    value={categoriaId} 
+                    onChange={e => setCategoriaId(e.target.value)} 
+                    className="flex-1 rounded-xl border border-pink-100 p-3 outline-none focus:border-primary bg-transparent"
+                  >
+                    <option value="">Geral</option>
+                    {categorias.map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.nome}</option>
+                    ))}
+                    <option value="new">+ Criar Nova Categoria</option>
+                  </select>
+                </div>
+              </div>
+              {categoriaId === "new" && (
+                <div className="flex gap-2 items-end bg-pink-50 p-3 rounded-xl border border-pink-100">
+                  <div className="flex-1">
+                    <label className="mb-1 block text-xs font-medium text-foreground/80">Nome da Nova Categoria</label>
+                    <input 
+                      value={novaCategoria} 
+                      onChange={e => setNovaCategoria(e.target.value)} 
+                      placeholder="Ex: Biquínis" 
+                      className="w-full rounded-xl border border-pink-200 p-2 text-sm outline-none focus:border-primary" 
+                    />
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (novaCategoria.trim()) {
+                        createCatMutation.mutate(novaCategoria.trim());
+                      }
+                    }}
+                    disabled={createCatMutation.isPending || !novaCategoria.trim()}
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {createCatMutation.isPending ? "..." : "Criar"}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setCategoriaId("")}
+                    className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition hover:text-primary"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Imagens da Peça ({imagens.length})</label>
                 <input 
@@ -485,6 +584,102 @@ function MarketingPanel({ token }: { token: string }) {
                   <td className="px-6 py-4 font-display">{c.nome}</td>
                   <td className="px-6 py-4 text-muted-foreground">{c.whatsapp}</td>
                   <td className="px-6 py-4 text-xs text-muted-foreground">{c.endereco}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function CategoriasPanel({ token }: { token: string }) {
+  const queryClient = useQueryClient();
+  const [nome, setNome] = useState("");
+  
+  const { data: categorias = [], isLoading } = useQuery({
+    queryKey: ["categorias"],
+    queryFn: fetchCategorias,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (nome: string) => createCategoria(token, nome),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categorias"] });
+      setNome("");
+      alert("Categoria criada com sucesso!");
+    },
+    onError: (e) => alert(e.message)
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteCategoria(token, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categorias"] });
+      alert("Categoria deletada com sucesso!");
+    },
+    onError: (e) => alert(e.message)
+  });
+
+  return (
+    <>
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Organização</p>
+        <h1 className="mt-1 font-display text-3xl sm:text-4xl">Categorias</h1>
+      </div>
+
+      <div className="mb-8 flex gap-4">
+        <input 
+          value={nome} 
+          onChange={e => setNome(e.target.value)} 
+          placeholder="Nome da Categoria (Ex: Biquínis)" 
+          className="w-full max-w-sm rounded-full border border-pink-100 px-6 py-3 outline-none focus:border-primary" 
+        />
+        <button 
+          onClick={() => {
+            if (nome.trim()) {
+              createMutation.mutate(nome.trim());
+            }
+          }}
+          disabled={createMutation.isPending || !nome.trim()}
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_25px_-10px_rgba(236,72,153,0.55)] transition hover:scale-105 disabled:opacity-50"
+        >
+          <Plus className="h-4 w-4" />
+          {createMutation.isPending ? "Criando..." : "Criar"}
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-3xl bg-white shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-pink-50/50 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <tr>
+                <th className="px-6 py-3 font-semibold">Nome</th>
+                <th className="px-6 py-3 font-semibold"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={2} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
+              ) : categorias.length === 0 ? (
+                <tr><td colSpan={2} className="p-6 text-center text-muted-foreground">Nenhuma categoria cadastrada.</td></tr>
+              ) : categorias.map((c: any) => (
+                <tr key={c.id} className="border-t border-pink-50 hover:bg-pink-50/40">
+                  <td className="px-6 py-4 font-display text-base">{c.nome}</td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => {
+                        if (confirm(`Deletar a categoria ${c.nome}?`)) {
+                          deleteMutation.mutate(c.id);
+                        }
+                      }}
+                      className="text-muted-foreground hover:text-red-500 transition"
+                      title="Deletar"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
