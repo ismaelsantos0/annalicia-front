@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -1980,12 +1980,12 @@ function DestaquesPanel({ token }: { token: string }) {
   });
 
   // Sincroniza config quando carregado
-  if (config && tituloDestaques === "✨ Destaques da Semana" && config.titulo_destaques) {
-    setTituloDestaques(config.titulo_destaques);
-  }
-  if (config && !categoriaDestaqueId && config.categoria_destaque_id) {
-    setCategoriaDestaqueId(config.categoria_destaque_id);
-  }
+  useEffect(() => {
+    if (!config) return;
+    if (config.titulo_destaques) setTituloDestaques(config.titulo_destaques);
+    if (config.categoria_destaque_id) setCategoriaDestaqueId(config.categoria_destaque_id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config?.titulo_destaques, config?.categoria_destaque_id]);
 
   const saveMutation = useMutation({
     mutationFn: () => updateConfiguracoes(token, {
