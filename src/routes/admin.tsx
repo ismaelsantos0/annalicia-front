@@ -17,7 +17,6 @@ import {
   MessageCircle,
   CreditCard,
   X,
-  Plus,
   Minus,
 } from "lucide-react";
 import Cropper from "react-easy-crop";
