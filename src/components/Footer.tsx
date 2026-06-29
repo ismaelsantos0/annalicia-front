@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Instagram, Music2, Heart } from "lucide-react";
+import { Instagram, Music2, Heart, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchConfiguracoes } from "../lib/api";
 
@@ -9,12 +9,28 @@ export function Footer() {
     queryFn: () => fetchConfiguracoes(),
   });
 
+  const nomeLoja = config?.nome_loja || "Annalicia Modas";
+  const [nomePrimeiro, ...nomeResto] = nomeLoja.split(" ");
+
   return (
     <footer className="mt-24 border-t border-pink-100 bg-pink-50/60">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-10 sm:flex-row sm:justify-between sm:px-6 lg:px-8">
-        <p className="font-display text-lg text-primary">
-          Annalicia <span className="text-foreground">Modas</span>
-        </p>
+        <div className="flex items-center gap-2">
+          {config?.logo_url ? (
+            <img
+              src={config.logo_url}
+              alt={nomeLoja}
+              className="h-7 w-7 rounded-full object-cover"
+            />
+          ) : (
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground">
+              <Sparkles className="h-3 w-3" />
+            </span>
+          )}
+          <p className="font-display text-lg text-primary">
+            {nomePrimeiro} <span className="text-foreground">{nomeResto.join(" ")}</span>
+          </p>
+        </div>
         <div className="flex gap-3">
           {config?.link_tiktok && (
             <a
@@ -41,7 +57,7 @@ export function Footer() {
         </div>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           Feito com <Link to="/admin"><Heart className="h-3 w-3 fill-primary text-primary cursor-default hover:opacity-50" /></Link> ©{" "}
-          {new Date().getFullYear()} Annalicia Modas
+          {new Date().getFullYear()} {nomeLoja}
         </p>
       </div>
     </footer>

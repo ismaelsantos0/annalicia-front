@@ -1062,6 +1062,8 @@ function ConfiguracoesPanel({ token }: { token: string }) {
   const [textoBrinde, setTextoBrinde] = useState("Brinde fofo no pedido");
   const [tituloDestaques, setTituloDestaques] = useState("✨ Destaques da Semana");
   const [categoriaDestaqueId, setCategoriaDestaqueId] = useState("");
+  const [nomeLoja, setNomeLoja] = useState("Annalicia Modas");
+  const [logoUrl, setLogoUrl] = useState("");
 
   const { data: categorias = [] } = useQuery({ queryKey: ["categorias"], queryFn: fetchCategorias });
 
@@ -1087,6 +1089,8 @@ function ConfiguracoesPanel({ token }: { token: string }) {
       if (config.texto_brinde) setTextoBrinde(config.texto_brinde);
       if (config.titulo_destaques) setTituloDestaques(config.titulo_destaques);
       if (config.categoria_destaque_id) setCategoriaDestaqueId(config.categoria_destaque_id);
+      if (config.nome_loja) setNomeLoja(config.nome_loja);
+      if (config.logo_url) setLogoUrl(config.logo_url);
     }
   }, [config, isLoading]);
 
@@ -1107,7 +1111,9 @@ function ConfiguracoesPanel({ token }: { token: string }) {
       texto_frete: textoFrete,
       texto_brinde: textoBrinde,
       titulo_destaques: tituloDestaques,
-      categoria_destaque_id: categoriaDestaqueId || null
+      categoria_destaque_id: categoriaDestaqueId || null,
+      nome_loja: nomeLoja,
+      logo_url: logoUrl || null,
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["configuracoes"] });
@@ -1125,6 +1131,45 @@ function ConfiguracoesPanel({ token }: { token: string }) {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
+
+        {/* Identidade da Loja */}
+        <div className="md:col-span-2 rounded-3xl bg-white p-6 shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
+          <h2 className="font-display text-xl mb-6">🏷️ Identidade da Loja</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-primary">Nome da Loja</label>
+              <input
+                type="text"
+                value={nomeLoja}
+                onChange={e => setNomeLoja(e.target.value)}
+                placeholder="Ex: Annalicia Modas"
+                className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Aparece na Navbar, Footer e título da página.</p>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-primary">URL da Logo</label>
+              <input
+                type="url"
+                value={logoUrl}
+                onChange={e => setLogoUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Link direto para a imagem da sua logo (JPG, PNG ou SVG). Se vazio, exibe ícone padrão.</p>
+            </div>
+            {logoUrl && (
+              <div className="sm:col-span-2 flex items-center gap-4">
+                <img src={logoUrl} alt="Pré-visualização da logo" className="h-14 w-14 rounded-full object-cover border border-pink-100" onError={e => (e.currentTarget.style.display = 'none')} />
+                <div>
+                  <p className="text-sm font-semibold">Pré-visualização</p>
+                  <p className="text-xs text-muted-foreground">Assim aparecerá na Navbar e Footer da loja.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="rounded-3xl bg-white p-6 shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
           <h2 className="font-display text-xl mb-6">Níveis de Alerta de Estoque</h2>
           <p className="mt-2 text-sm text-muted-foreground">

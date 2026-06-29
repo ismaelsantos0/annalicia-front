@@ -1,19 +1,37 @@
 import { Link } from "@tanstack/react-router";
 import { ShoppingBag, Sparkles } from "lucide-react";
 import { useCart } from "../lib/cart-context";
+import { useQuery } from "@tanstack/react-query";
+import { fetchConfiguracoes } from "../lib/api";
 
 export function Navbar() {
   const { count, openCart } = useCart();
+  const { data: config } = useQuery({
+    queryKey: ["configuracoes_public"],
+    queryFn: () => fetchConfiguracoes(),
+  });
+
+  const nomeLoja = config?.nome_loja || "Annalicia Modas";
+  const [nomePrimeiro, ...nomeResto] = nomeLoja.split(" ");
 
   return (
     <header className="sticky top-0 z-30 border-b border-pink-100 bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground">
-            <Sparkles className="h-4 w-4" />
-          </span>
+          {config?.logo_url ? (
+            <img
+              src={config.logo_url}
+              alt={nomeLoja}
+              className="h-9 w-9 rounded-full object-cover"
+            />
+          ) : (
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground">
+              <Sparkles className="h-4 w-4" />
+            </span>
+          )}
           <span className="font-display text-xl text-primary sm:text-2xl">
-            Annalicia <span className="text-foreground">Modas</span>
+            {nomePrimeiro}{" "}
+            <span className="text-foreground">{nomeResto.join(" ")}</span>
           </span>
         </Link>
 
