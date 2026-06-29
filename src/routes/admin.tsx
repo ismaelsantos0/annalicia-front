@@ -192,23 +192,6 @@ function ProductsPanel({ token }: { token: string }) {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
-  // Instagram import
-  const [igLink, setIgLink] = useState("");
-  const igMutation = useMutation({
-    mutationFn: () => importFromInstagram(token, igLink.trim()),
-    onSuccess: (data) => {
-      if (data.images.length === 0) {
-        alert("O post não possui imagens ou é um vídeo. Tente outro link.");
-        return;
-      }
-      setImagens(data.images);
-      if (data.nome_sugerido && !nome) setNome(data.nome_sugerido);
-      setIgLink("");
-      alert(`✅ ${data.images.length} imagem(ns) importada(s) com sucesso!`);
-    },
-    onError: (e: any) => alert("Erro ao importar: " + e.message)
-  });
-
   const queryClient = useQueryClient();
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["produtos"],
@@ -382,31 +365,6 @@ function ProductsPanel({ token }: { token: string }) {
               </button>
             </div>
             <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
-              {/* Instagram Import */}
-              <div className="rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 p-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-purple-600">✨ Importar do Instagram</p>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={igLink}
-                    onChange={e => setIgLink(e.target.value)}
-                    placeholder="https://www.instagram.com/p/..."
-                    className="flex-1 rounded-xl border border-purple-100 p-2.5 text-sm outline-none focus:border-purple-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => { if (igLink.trim()) igMutation.mutate(); }}
-                    disabled={igMutation.isPending || !igLink.trim()}
-                    className="rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:opacity-90 disabled:opacity-50 whitespace-nowrap"
-                  >
-                    {igMutation.isPending ? "Buscando..." : "Importar 📸"}
-                  </button>
-                </div>
-                {igMutation.isPending && (
-                  <p className="mt-2 text-xs text-purple-500 animate-pulse">Buscando imagens do post, pode levar alguns segundos...</p>
-                )}
-              </div>
-
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Nome da Peça</label>
                 <input required value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Cropped Rosa" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
