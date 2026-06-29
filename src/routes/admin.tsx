@@ -603,17 +603,18 @@ function OrdersPanel({ token }: { token: string }) {
                   <td className="px-6 py-4 font-semibold text-primary">{formatBRL(o.total)}</td>
                   <td className="px-6 py-4">
                     {o.status !== 'cancelado' && o.status !== 'entregue' && (
-                      <select 
-                        value={o.status}
-                        onChange={(e) => handleStatusChange(o.id, o.status, e.target.value)}
-                        className="rounded-xl border border-pink-100 bg-pink-50/30 px-3 py-1 text-xs focus:border-primary focus:outline-none"
-                      >
-                        <option value="pendente">Pendente</option>
-                        <option value="confirmado">Confirmado</option>
-                        <option value="enviado">Enviado</option>
-                        <option value="entregue">Entregue</option>
-                        <option value="cancelado">Cancelado</option>
-                      </select>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {o.status === 'pendente' && (
+                          <button onClick={() => handleStatusChange(o.id, o.status, 'confirmado')} className="rounded-lg bg-blue-100 px-3 py-1 text-[10px] font-bold text-blue-700 transition hover:bg-blue-200">Confirmar</button>
+                        )}
+                        {o.status === 'confirmado' && (
+                          <button onClick={() => handleStatusChange(o.id, o.status, 'enviado')} className="rounded-lg bg-purple-100 px-3 py-1 text-[10px] font-bold text-purple-700 transition hover:bg-purple-200">Marcar Enviado</button>
+                        )}
+                        {o.status === 'enviado' && (
+                          <button onClick={() => handleStatusChange(o.id, o.status, 'entregue')} className="rounded-lg bg-green-100 px-3 py-1 text-[10px] font-bold text-green-700 transition hover:bg-green-200">Marcar Entregue</button>
+                        )}
+                        <button onClick={() => handleStatusChange(o.id, o.status, 'cancelado')} className="rounded-lg bg-red-50 px-3 py-1 text-[10px] font-bold text-red-600 transition hover:bg-red-100">Cancelar</button>
+                      </div>
                     )}
                   </td>
                 </tr>
