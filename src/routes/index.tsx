@@ -6,7 +6,7 @@ import { CartDrawer } from "../components/CartDrawer";
 import { ProductCard } from "../components/ProductCard";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProdutos, fetchCategorias } from "../lib/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Product } from "../lib/products";
 
 export const Route = createFileRoute("/")({
@@ -47,7 +47,6 @@ function Storefront() {
   const activeBanners = banners.filter((b: any) => b.ativo);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
-  import { useEffect } from "react";
   useEffect(() => {
     if (activeBanners.length <= 1) return;
     const interval = setInterval(() => {
