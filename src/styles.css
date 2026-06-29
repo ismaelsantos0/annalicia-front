@@ -34,25 +34,28 @@
 
 :root {
   --radius: 1rem;
-  /* Rosa muito suave */
-  --background: oklch(0.985 0.012 5);
-  --foreground: oklch(0.25 0.04 350);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.25 0.04 350);
-  /* Pink vibrante */
-  --primary: oklch(0.66 0.21 0);
-  --primary-foreground: oklch(0.99 0.005 0);
-  --secondary: oklch(0.95 0.04 0);
-  --secondary-foreground: oklch(0.35 0.12 350);
-  --muted: oklch(0.96 0.02 350);
-  --muted-foreground: oklch(0.55 0.05 350);
-  --accent: oklch(0.72 0.15 10);
-  --accent-foreground: oklch(0.99 0.005 0);
-  /* Verde menta claro */
-  --mint: oklch(0.95 0.05 165);
-  --border: oklch(0.92 0.02 350);
-  --input: oklch(0.92 0.02 350);
-  --ring: oklch(0.66 0.21 0);
+  /* Gothic Romance Palette */
+  --background: #F2F4F3; /* Off-white / pale gray */
+  --foreground: #0A0908; /* Dark almost black */
+  --card: #FFFFFF;
+  --card-foreground: #0A0908;
+  
+  --primary: #49111C; /* Deep burgundy/wine red */
+  --primary-foreground: #F2F4F3;
+  
+  --secondary: #A9927D; /* Warm taupe/beige */
+  --secondary-foreground: #0A0908;
+  
+  --muted: #E2E4E3; /* Slightly darker than background */
+  --muted-foreground: #5E503F; /* Dark muted olive/brown */
+  
+  --accent: #5E503F;
+  --accent-foreground: #F2F4F3;
+  
+  --mint: #A9927D; 
+  --border: #D1D5DB;
+  --input: #D1D5DB;
+  --ring: #49111C;
 }
 
 @layer base {

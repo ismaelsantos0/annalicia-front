@@ -183,19 +183,13 @@ function Storefront() {
             </div>
           </div>
           <div className="relative" key={`img-${currentBannerIndex}`}>
-            <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-pink-200 via-pink-100 to-emerald-100 blur-2xl animate-pulse" />
-            <div className="relative overflow-hidden rounded-[2.5rem] shadow-[0_30px_60px_-20px_rgba(236,72,153,0.4)] animate-in fade-in zoom-in-95 duration-700">
+            <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 blur-2xl animate-pulse" />
+            <div className="relative overflow-hidden rounded-[2.5rem] shadow-xl animate-in fade-in zoom-in-95 duration-700">
               <img
                 src={currentBanner.image_url}
                 alt="Banner principal"
                 className="aspect-[4/5] w-full object-cover"
               />
-            </div>
-            <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white px-4 py-3 shadow-lg animate-in slide-in-from-bottom-8 duration-700 delay-150">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Best seller
-              </p>
-              <p className="font-display text-primary">+1.2k vendidos 💖</p>
             </div>
           </div>
         </div>
