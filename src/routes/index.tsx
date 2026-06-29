@@ -4,7 +4,9 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { CartDrawer } from "../components/CartDrawer";
 import { ProductCard } from "../components/ProductCard";
-import { products } from "../lib/products";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProdutos } from "../lib/api";
+import type { Product } from "../lib/products";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,6 +23,11 @@ export const Route = createFileRoute("/")({
 });
 
 function Storefront() {
+  const { data: products = [], isLoading } = useQuery<Product[]>({
+    queryKey: ["produtos"],
+    queryFn: fetchProdutos,
+  });
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -108,9 +115,13 @@ function Storefront() {
           </a>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {products.slice(0, 3).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
+          {isLoading ? (
+            <p className="text-muted-foreground">Carregando looks...</p>
+          ) : (
+            products.slice(0, 3).map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))
+          )}
         </div>
 
         <div id="novidades" className="mt-20 mb-10">
@@ -122,9 +133,13 @@ function Storefront() {
           </h2>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {products.slice(3).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
+          {isLoading ? (
+            <p className="text-muted-foreground">Carregando...</p>
+          ) : (
+            products.slice(3).map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))
+          )}
         </div>
       </section>
 

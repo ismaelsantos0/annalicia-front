@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Shirt,
   Boxes,
@@ -12,9 +13,8 @@ import {
   Send,
   Users,
 } from "lucide-react";
-import { products, formatBRL } from "../lib/products";
-import { useCustomers } from "../lib/customers-context";
-import { MarketingModal } from "../components/MarketingModal";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin } from "../lib/api";
+import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
 export const Route = createFileRoute("/admin")({
@@ -26,19 +26,70 @@ export const Route = createFileRoute("/admin")({
 
 type Tab = "produtos" | "estoque" | "pedidos" | "marketing";
 
-const navItems: { id: Tab; label: string; icon: typeof Shirt }[] = [
-  { id: "produtos", label: "Produtos", icon: Shirt },
-  { id: "estoque", label: "Estoque", icon: Boxes },
-  { id: "pedidos", label: "Pedidos", icon: Receipt },
-  { id: "marketing", label: "Marketing", icon: Megaphone },
+const navItems = [
+  { id: "produtos" as Tab, label: "Produtos", icon: Shirt },
+  { id: "estoque" as Tab, label: "Estoque", icon: Boxes },
+  { id: "pedidos" as Tab, label: "Pedidos", icon: Receipt },
+  { id: "marketing" as Tab, label: "Marketing", icon: Megaphone },
 ];
 
 function AdminDashboard() {
+  const [token, setToken] = useState<string | null>(localStorage.getItem("admin_token"));
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [tab, setTab] = useState<Tab>("produtos");
+
+  const loginMutation = useMutation({
+    mutationFn: () => loginAdmin(username, password),
+    onSuccess: (data) => {
+      localStorage.setItem("admin_token", data.access_token);
+      setToken(data.access_token);
+    },
+    onError: () => alert("Credenciais inválidas")
+  });
+
+  if (!token) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-pink-50 p-4">
+        <form 
+          onSubmit={(e) => { e.preventDefault(); loginMutation.mutate(); }}
+          className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-xl"
+        >
+          <div className="mb-8 text-center">
+            <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-primary text-white">
+              <Sparkles className="h-6 w-6" />
+            </span>
+            <h1 className="mt-4 font-display text-2xl text-primary">Admin Loja</h1>
+          </div>
+          <div className="space-y-4">
+            <input
+              placeholder="Usuário"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+            />
+            <input
+              type="password"
+              placeholder="Senha"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+            />
+            <button 
+              type="submit"
+              disabled={loginMutation.isPending}
+              className="w-full rounded-xl bg-primary py-3 font-semibold text-white transition hover:opacity-90"
+            >
+              {loginMutation.isPending ? "Entrando..." : "Entrar"}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      {/* Sidebar */}
       <aside className="border-b border-pink-100 bg-white md:w-64 md:border-b-0 md:border-r">
         <div className="border-b border-pink-100 px-6 py-6">
           <Link to="/" className="flex items-center gap-2">
@@ -78,14 +129,20 @@ function AdminDashboard() {
             <ArrowLeft className="h-3.5 w-3.5" />
             Voltar à loja
           </Link>
+          <button 
+            onClick={() => { localStorage.removeItem("admin_token"); setToken(null); }}
+            className="mt-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-400 hover:text-red-500"
+          >
+            Sair
+          </button>
         </div>
       </aside>
 
       <main className="flex-1 px-4 py-8 sm:px-8">
-        {tab === "marketing" ? (
-          <MarketingPanel />
-        ) : tab === "pedidos" ? (
-          <OrdersPanel />
+        {tab === "pedidos" ? (
+          <OrdersPanel token={token} />
+        ) : tab === "marketing" ? (
+          <MarketingPanel token={token} />
         ) : (
           <ProductsPanel />
         )}
@@ -95,84 +152,47 @@ function AdminDashboard() {
 }
 
 function ProductsPanel() {
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ["produtos"],
+    queryFn: fetchProdutos,
+  });
+
   return (
     <>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Dashboard
-          </p>
-          <h1 className="mt-1 font-display text-3xl sm:text-4xl">
-            Gestão de Peças
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gerencie todo o seu catálogo aesthetic em um só lugar 💖
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Dashboard</p>
+          <h1 className="mt-1 font-display text-3xl sm:text-4xl">Gestão de Peças</h1>
         </div>
-        <button
-          onClick={() => alert("Abrir modal: Adicionar Nova Peça ✨")}
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_25px_-10px_rgba(236,72,153,0.55)] transition hover:scale-105"
-        >
+        <button className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_25px_-10px_rgba(236,72,153,0.55)] transition hover:scale-105">
           <Plus className="h-4 w-4" />
           Adicionar Nova Peça
         </button>
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[
-          { label: "Peças", value: products.length, tone: "bg-pink-100 text-primary" },
-          { label: "Em estoque", value: products.reduce((s, p) => s + p.stock, 0), tone: "bg-mint text-emerald-700" },
-          { label: "Pedidos hoje", value: 23, tone: "bg-pink-100 text-primary" },
-          { label: "Receita", value: "R$ 4.2k", tone: "bg-mint text-emerald-700" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">{s.label}</p>
-            <p className={`mt-2 inline-block rounded-full px-3 py-1 font-display text-lg ${s.tone}`}>
-              {s.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
       <div className="overflow-hidden rounded-3xl bg-white shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
-        <div className="flex items-center justify-between gap-4 border-b border-pink-100 px-6 py-4">
-          <h2 className="font-display text-lg">Todas as peças</h2>
-          <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              placeholder="Buscar peça..."
-              className="rounded-full border border-pink-100 bg-pink-50/50 py-2 pl-9 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
-            />
-          </div>
-        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-pink-50/50 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               <tr>
                 <th className="px-6 py-3 font-semibold">Foto</th>
-                <th className="px-6 py-3 font-semibold">Nome da Peça</th>
-                <th className="px-6 py-3 font-semibold">Categoria</th>
+                <th className="px-6 py-3 font-semibold">Nome</th>
                 <th className="px-6 py-3 font-semibold">Preço</th>
-                <th className="px-6 py-3 font-semibold">Qtd. Estoque</th>
+                <th className="px-6 py-3 font-semibold">Estoque</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
-                <tr key={p.id} className="border-t border-pink-50 transition hover:bg-pink-50/40">
+              {isLoading ? (
+                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
+              ) : products.map((p: any) => (
+                <tr key={p.id} className="border-t border-pink-50 hover:bg-pink-50/40">
                   <td className="px-6 py-4">
                     <img src={p.image} alt={p.name} className="h-14 w-12 rounded-xl object-cover" />
                   </td>
                   <td className="px-6 py-4 font-display text-base">{p.name}</td>
-                  <td className="px-6 py-4 text-muted-foreground">{p.category}</td>
                   <td className="px-6 py-4 font-semibold text-primary">{formatBRL(p.price)}</td>
                   <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                        p.stock < 10
-                          ? "bg-pink-100 text-primary"
-                          : "bg-mint text-emerald-700"
-                      }`}
-                    >
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${p.stock < 10 ? "bg-pink-100 text-primary" : "bg-mint text-emerald-700"}`}>
                       {p.stock} un.
                     </span>
                   </td>
@@ -186,166 +206,90 @@ function ProductsPanel() {
   );
 }
 
-function OrdersPanel() {
-  const { orders, customers } = useCustomers();
+function OrdersPanel({ token }: { token: string }) {
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ["pedidos"],
+    queryFn: () => fetchPedidosAdmin(token),
+  });
+
   return (
     <>
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-          Vendas
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Vendas</p>
         <h1 className="mt-1 font-display text-3xl sm:text-4xl">Pedidos</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Tudo o que rolou nas vendas online ✨
-        </p>
       </div>
 
       <div className="overflow-hidden rounded-3xl bg-white shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
-        {orders.length === 0 ? (
-          <p className="px-6 py-12 text-center text-sm text-muted-foreground">
-            Nenhum pedido ainda. Faça uma compra na vitrine para testar.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-pink-50/50 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-3">Pedido</th>
-                  <th className="px-6 py-3">Cliente</th>
-                  <th className="px-6 py-3">WhatsApp</th>
-                  <th className="px-6 py-3">Itens</th>
-                  <th className="px-6 py-3">Total</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-pink-50/50 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <tr>
+                <th className="px-6 py-3">Pedido ID</th>
+                <th className="px-6 py-3">Cliente</th>
+                <th className="px-6 py-3">WhatsApp</th>
+                <th className="px-6 py-3">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
+              ) : orders.length === 0 ? (
+                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Nenhum pedido ainda.</td></tr>
+              ) : orders.map((o: any) => (
+                <tr key={o.id} className="border-t border-pink-50 hover:bg-pink-50/40">
+                  <td className="px-6 py-4 font-mono text-xs">{o.id}</td>
+                  <td className="px-6 py-4 font-display">{o.cliente?.nome}</td>
+                  <td className="px-6 py-4 text-muted-foreground">{o.cliente?.whatsapp}</td>
+                  <td className="px-6 py-4 font-semibold text-primary">{formatBRL(o.total)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {orders.map((o) => {
-                  const c = customers.find((x) => x.id === o.customerId);
-                  return (
-                    <tr
-                      key={o.id}
-                      className="border-t border-pink-50 hover:bg-pink-50/40"
-                    >
-                      <td className="px-6 py-4 font-mono text-xs">{o.id}</td>
-                      <td className="px-6 py-4 font-display">{c?.name}</td>
-                      <td className="px-6 py-4 text-muted-foreground">
-                        {c ? formatWhatsApp(c.whatsapp) : "—"}
-                      </td>
-                      <td className="px-6 py-4">{o.items.length}</td>
-                      <td className="px-6 py-4 font-semibold text-primary">
-                        {formatBRL(o.total)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </>
   );
 }
 
-function MarketingPanel() {
-  const { customers, orders } = useCustomers();
-  const [modal, setModal] = useState(false);
-
-  const buyersCount = new Set(orders.map((o) => o.customerId)).size;
+function MarketingPanel({ token }: { token: string }) {
+  const { data: customers = [], isLoading } = useQuery({
+    queryKey: ["clientes"],
+    queryFn: () => fetchClientes(token),
+  });
 
   return (
     <>
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Engajamento
-          </p>
-          <h1 className="mt-1 font-display text-3xl sm:text-4xl">
-            Marketing & Disparos
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Reengaje suas clientes via WhatsApp com novidades e promoções 💌
-          </p>
-        </div>
-        <button
-          onClick={() => setModal(true)}
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_25px_-10px_rgba(236,72,153,0.55)] hover:scale-105"
-        >
-          <Send className="h-4 w-4" />
-          Nova campanha
-        </button>
-      </div>
-
-      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Clientes" value={customers.length} icon={<Users className="h-4 w-4" />} />
-        <StatCard label="Compradoras" value={buyersCount} icon={<Sparkles className="h-4 w-4" />} />
-        <StatCard label="Pedidos" value={orders.length} icon={<Receipt className="h-4 w-4" />} />
-        <StatCard label="Campanhas" value={0} icon={<Megaphone className="h-4 w-4" />} />
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Engajamento</p>
+        <h1 className="mt-1 font-display text-3xl sm:text-4xl">Marketing & Disparos</h1>
       </div>
 
       <div className="overflow-hidden rounded-3xl bg-white shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
-        <div className="border-b border-pink-100 px-6 py-4">
-          <h2 className="font-display text-lg">Base de clientes</h2>
-          <p className="text-xs text-muted-foreground">
-            Apenas clientes com WhatsApp confirmado recebem disparos.
-          </p>
-        </div>
-        {customers.length === 0 ? (
-          <p className="px-6 py-12 text-center text-sm text-muted-foreground">
-            Sua base está vazia. Quando alguém finalizar um pedido, aparece aqui.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-pink-50/50 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-3">Cliente</th>
-                  <th className="px-6 py-3">WhatsApp</th>
-                  <th className="px-6 py-3">Endereço</th>
-                  <th className="px-6 py-3">Pedidos</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-pink-50/50 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <tr>
+                <th className="px-6 py-3">Cliente</th>
+                <th className="px-6 py-3">WhatsApp</th>
+                <th className="px-6 py-3">Endereço</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={3} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
+              ) : customers.length === 0 ? (
+                <tr><td colSpan={3} className="p-6 text-center text-muted-foreground">Nenhum cliente ainda.</td></tr>
+              ) : customers.map((c: any) => (
+                <tr key={c.id} className="border-t border-pink-50">
+                  <td className="px-6 py-4 font-display">{c.nome}</td>
+                  <td className="px-6 py-4 text-muted-foreground">{c.whatsapp}</td>
+                  <td className="px-6 py-4 text-xs text-muted-foreground">{c.endereco}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {customers.map((c) => (
-                  <tr key={c.id} className="border-t border-pink-50">
-                    <td className="px-6 py-4 font-display">{c.name}</td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      {formatWhatsApp(c.whatsapp)}
-                    </td>
-                    <td className="px-6 py-4 text-xs text-muted-foreground">
-                      {c.address}
-                    </td>
-                    <td className="px-6 py-4">
-                      {orders.filter((o) => o.customerId === c.id).length}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      <MarketingModal open={modal} onClose={() => setModal(false)} />
     </>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        {icon}
-        {label}
-      </div>
-      <p className="mt-2 font-display text-2xl text-primary">{value}</p>
-    </div>
   );
 }

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { X, MessageCircle, MapPin, User } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import { useCart } from "../lib/cart-context";
-import { useCustomers } from "../lib/customers-context";
+import { createPedido } from "../lib/api";
 import {
   formatWhatsApp,
   isValidWhatsApp,
@@ -16,12 +17,21 @@ type Props = {
 
 export function CheckoutModal({ open, onClose }: Props) {
   const { items, total, updateQuantity } = useCart();
-  const { registerOrder } = useCustomers();
+  
+  const mutation = useMutation({
+    mutationFn: createPedido,
+    onSuccess: (data) => {
+      items.forEach((i) => updateQuantity(i.id, 0));
+      setSuccess(data.id);
+    },
+    onError: (error) => {
+      alert(error.message);
+    }
+  });
 
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [address, setAddress] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [errors, setErrors] = useState<{
     name?: string;
@@ -42,18 +52,12 @@ export function CheckoutModal({ open, onClose }: Props) {
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
-    setSubmitting(true);
-    const { order } = registerOrder({
-      name: name.trim(),
-      whatsapp: onlyDigits(whatsapp),
-      address: address.trim(),
-      items,
-      total,
+    mutation.mutate({
+      cliente_nome: name.trim(),
+      cliente_whatsapp: onlyDigits(whatsapp),
+      cliente_endereco: address.trim(),
+      itens: items.map(i => ({ produto_id: i.id, quantidade: i.quantity }))
     });
-    // limpa o carrinho
-    items.forEach((i) => updateQuantity(i.id, 0));
-    setSubmitting(false);
-    setSuccess(order.id);
   }
 
   function handleClose() {
@@ -139,10 +143,10 @@ export function CheckoutModal({ open, onClose }: Props) {
 
             <button
               type="submit"
-              disabled={submitting || items.length === 0}
+              disabled={mutation.isPending || items.length === 0}
               className="w-full rounded-full bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_10px_25px_-10px_rgba(236,72,153,0.6)] hover:opacity-90 disabled:opacity-40"
             >
-              {submitting ? "Enviando..." : "Confirmar pedido"}
+              {mutation.isPending ? "Enviando..." : "Confirmar pedido"}
             </button>
           </form>
         )}
