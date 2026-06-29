@@ -96,6 +96,43 @@ export async function deleteCategoria(token: string, id: string) {
   return true;
 }
 
+export async function deleteConfiguracao(token: string, id: number) {
+  const res = await fetch(`${API_URL}/configuracoes/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Falha ao deletar configuração");
+  return true;
+}
+
+export async function fetchWhatsAppStatus(token: string) {
+  const res = await fetch(`${API_URL}/whatsapp/status`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Falha ao buscar status do WhatsApp");
+  return res.json();
+}
+
+export async function fetchWhatsAppQRCode(token: string) {
+  const res = await fetch(`${API_URL}/whatsapp/qrcode`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Falha ao buscar QR Code");
+  }
+  return res.json();
+}
+
+export async function logoutWhatsApp(token: string) {
+  const res = await fetch(`${API_URL}/whatsapp/logout`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Falha ao desconectar WhatsApp");
+  return true;
+}
+
 export async function createPedido(dados: {
   cliente_nome: string;
   cliente_whatsapp: string;

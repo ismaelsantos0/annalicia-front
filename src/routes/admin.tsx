@@ -14,9 +14,10 @@ import {
   Users,
   Trash2,
   Settings,
+  MessageCircle,
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminDashboard,
 });
 
-type Tab = "produtos" | "categorias" | "estoque" | "pedidos" | "marketing" | "configuracoes";
+type Tab = "produtos" | "categorias" | "estoque" | "pedidos" | "marketing" | "configuracoes" | "whatsapp";
 
 const navItems = [
   { id: "produtos" as Tab, label: "Produtos", icon: Shirt },
@@ -35,6 +36,7 @@ const navItems = [
   { id: "estoque" as Tab, label: "Estoque", icon: Boxes },
   { id: "pedidos" as Tab, label: "Pedidos", icon: Receipt },
   { id: "marketing" as Tab, label: "Marketing", icon: Megaphone },
+  { id: "whatsapp" as Tab, label: "WhatsApp", icon: MessageCircle },
   { id: "configuracoes" as Tab, label: "Configurações", icon: Settings },
 ];
 
@@ -159,6 +161,8 @@ function AdminDashboard() {
           <EstoquePanel token={token} />
         ) : tab === "configuracoes" ? (
           <ConfiguracoesPanel token={token} />
+        ) : tab === "whatsapp" ? (
+          <WhatsAppPanel token={token} />
         ) : (
           <ProductsPanel token={token} />
         )}
@@ -890,6 +894,103 @@ function ConfiguracoesPanel({ token }: { token: string }) {
               {mutation.isPending ? "Salvando..." : "Salvar Configurações"}
             </button>
           </form>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function WhatsAppPanel({ token }: { token: string }) {
+  const { data: statusData, isLoading: isLoadingStatus, refetch: refetchStatus } = useQuery({
+    queryKey: ["whatsapp_status"],
+    queryFn: () => fetchWhatsAppStatus(token),
+    refetchInterval: (query) => {
+      // Polling if not open
+      const st = query.state.data?.status;
+      if (st && st !== "open") return 3000;
+      return false;
+    }
+  });
+
+  const { data: qrData, isLoading: isLoadingQr } = useQuery({
+    queryKey: ["whatsapp_qrcode"],
+    queryFn: () => fetchWhatsAppQRCode(token),
+    enabled: statusData?.status !== "open",
+    retry: false
+  });
+
+  const logoutMut = useMutation({
+    mutationFn: () => logoutWhatsApp(token),
+    onSuccess: () => {
+      refetchStatus();
+    }
+  });
+
+  return (
+    <>
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Integrações</p>
+        <h1 className="mt-1 font-display text-3xl sm:text-4xl">WhatsApp API</h1>
+      </div>
+
+      <div className="max-w-2xl overflow-hidden rounded-3xl bg-white shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
+        <div className="p-6 sm:p-8">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="font-display text-xl">Status da Conexão</h2>
+            {isLoadingStatus ? (
+              <span className="inline-flex items-center rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-600">
+                Carregando...
+              </span>
+            ) : statusData?.status === "open" ? (
+              <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                Conectado
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">
+                Desconectado
+              </span>
+            )}
+          </div>
+
+          {statusData?.status === "open" ? (
+            <div className="text-center py-8">
+              <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-50 text-emerald-500">
+                <MessageCircle className="h-8 w-8" />
+              </span>
+              <p className="mt-4 text-sm text-muted-foreground">O WhatsApp está conectado e enviando mensagens de confirmação automaticamente.</p>
+              <button
+                onClick={() => {
+                  if (confirm("Tem certeza que deseja desconectar? O sistema deixará de enviar mensagens automáticas.")) {
+                    logoutMut.mutate();
+                  }
+                }}
+                disabled={logoutMut.isPending}
+                className="mt-6 rounded-full bg-red-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
+              >
+                {logoutMut.isPending ? "Desconectando..." : "Desconectar WhatsApp"}
+              </button>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="mb-6 text-sm text-muted-foreground">
+                Para o sistema conseguir enviar os comprovantes com código PIX automaticamente, leia o QR Code abaixo usando o <b>WhatsApp da Loja</b>.
+              </p>
+              
+              <div className="mx-auto mb-4 flex min-h-[256px] w-64 items-center justify-center rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 p-2">
+                {isLoadingQr ? (
+                  <p className="text-sm text-muted-foreground">Gerando QR Code...</p>
+                ) : qrData?.base64 ? (
+                  <img src={qrData.base64} alt="WhatsApp QR Code" className="w-full h-full object-contain mix-blend-multiply" />
+                ) : (
+                  <p className="text-sm text-muted-foreground text-red-500">Falha ao carregar QR Code. O servidor pode estar indisponível.</p>
+                )}
+              </div>
+              
+              <p className="text-xs text-muted-foreground mt-4">
+                Abra o WhatsApp no celular {">"} Dispositivos Conectados {">"} Conectar um Aparelho.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </>
