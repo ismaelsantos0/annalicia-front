@@ -250,14 +250,7 @@ function ProductsPanel({ token }: { token: string }) {
     return canvas.toDataURL("image/webp", 0.85);
   };
 
-  const parseImage = (imgData: string) => {
-    try {
-      const parsed = JSON.parse(imgData);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : imgData;
-    } catch {
-      return imgData;
-    }
-  };
+
 
   const deleteProdMutation = useMutation({
     mutationFn: (id: string) => deleteProduto(token, id),
@@ -314,7 +307,7 @@ function ProductsPanel({ token }: { token: string }) {
               ) : products.map((p: any) => (
                 <tr key={p.id} className="border-t border-pink-50 hover:bg-pink-50/40">
                   <td className="px-6 py-4">
-                    <img src={parseImage(p.image)} alt={p.name} className="h-14 w-12 rounded-xl object-cover" />
+                    <img src={p.images?.[0] || ""} alt={p.name} className="h-14 w-12 rounded-xl object-cover bg-pink-50" />
                   </td>
                   <td className="px-6 py-4 font-display text-base">{p.name}</td>
                   <td className="px-6 py-4 font-semibold text-primary">{formatBRL(p.price)}</td>
