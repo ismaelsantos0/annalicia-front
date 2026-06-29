@@ -393,7 +393,13 @@ function ProductsPanel({ token }: { token: string }) {
                     </span>
                   </div>
                   <div>
-                    <span className="block text-green-700/70 mb-0.5 text-xs">Margem (Markup)</span>
+                    <span className="block text-green-700/70 mb-0.5 text-xs" title="Percentual sobre o preço de venda">Margem</span>
+                    <span className="font-semibold text-green-700">
+                      {(((parseFloat(preco) - parseFloat(precoCusto)) / parseFloat(preco)) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-green-700/70 mb-0.5 text-xs" title="Percentual sobre o custo">Markup</span>
                     <span className="font-semibold text-green-700">
                       {(((parseFloat(preco) - parseFloat(precoCusto)) / parseFloat(precoCusto)) * 100).toFixed(1)}%
                     </span>
