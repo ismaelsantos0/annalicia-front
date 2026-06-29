@@ -13,7 +13,9 @@ import {
   Send,
   Users,
   X,
+  Trash2,
 } from "lucide-react";
+import Cropper from "react-easy-crop";
 import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
@@ -162,7 +164,14 @@ function ProductsPanel({ token }: { token: string }) {
   const [nome, setNome] = useState("");
   const [preco, setPreco] = useState("");
   const [estoque, setEstoque] = useState("");
-  const [imagem, setImagem] = useState("");
+  
+  // Imagens
+  const [imagens, setImagens] = useState<string[]>([]);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
   const queryClient = useQueryClient();
   const { data: products = [], isLoading } = useQuery({
@@ -175,7 +184,7 @@ function ProductsPanel({ token }: { token: string }) {
       nome,
       preco: parseFloat(preco.replace(",", ".")),
       estoque: parseInt(estoque, 10),
-      imagem_url: imagem || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
+      imagem_url: imagens.length > 0 ? JSON.stringify(imagens) : "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["produtos"] });
@@ -183,11 +192,61 @@ function ProductsPanel({ token }: { token: string }) {
       setNome("");
       setPreco("");
       setEstoque("");
-      setImagem("");
+      setImagens([]);
       alert("Produto salvo com sucesso!");
     },
     onError: (e) => alert(e.message)
   });
+
+  const getCroppedImg = async (imageSrc: string, pixelCrop: any) => {
+    const image = new Image();
+    image.src = imageSrc;
+    await new Promise((resolve) => (image.onload = resolve));
+    
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    
+    const MAX_SIZE = 1200;
+    let width = pixelCrop.width;
+    let height = pixelCrop.height;
+    
+    if (width > height) {
+      if (width > MAX_SIZE) {
+        height *= MAX_SIZE / width;
+        width = MAX_SIZE;
+      }
+    } else {
+      if (height > MAX_SIZE) {
+        width *= MAX_SIZE / height;
+        height = MAX_SIZE;
+      }
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      width,
+      height
+    );
+    
+    return canvas.toDataURL("image/webp", 0.85);
+  };
+
+  const parseImage = (imgData: string) => {
+    try {
+      const parsed = JSON.parse(imgData);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : imgData;
+    } catch {
+      return imgData;
+    }
+  };
 
   return (
     <>
@@ -222,7 +281,7 @@ function ProductsPanel({ token }: { token: string }) {
               ) : products.map((p: any) => (
                 <tr key={p.id} className="border-t border-pink-50 hover:bg-pink-50/40">
                   <td className="px-6 py-4">
-                    <img src={p.image} alt={p.name} className="h-14 w-12 rounded-xl object-cover" />
+                    <img src={parseImage(p.image)} alt={p.name} className="h-14 w-12 rounded-xl object-cover" />
                   </td>
                   <td className="px-6 py-4 font-display text-base">{p.name}</td>
                   <td className="px-6 py-4 font-semibold text-primary">{formatBRL(p.price)}</td>
@@ -263,7 +322,7 @@ function ProductsPanel({ token }: { token: string }) {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground/80">Imagem da Peça</label>
+                <label className="mb-1 block text-sm font-medium text-foreground/80">Imagens da Peça ({imagens.length})</label>
                 <input 
                   type="file" 
                   accept="image/*"
@@ -271,51 +330,31 @@ function ProductsPanel({ token }: { token: string }) {
                     const file = e.target.files?.[0];
                     if (!file) return;
                     
-                    // Comprimir e converter para Base64
                     const reader = new FileReader();
                     reader.readAsDataURL(file);
                     reader.onload = (event) => {
-                      const img = new Image();
-                      img.src = event.target?.result as string;
-                      img.onload = () => {
-                        const canvas = document.createElement("canvas");
-                        const ctx = canvas.getContext("2d")!;
-                        
-                        // Regra de exibição: max 1200px para manter alta resolução sem pesar o banco
-                        const MAX_SIZE = 1200;
-                        let width = img.width;
-                        let height = img.height;
-                        
-                        if (width > height) {
-                          if (width > MAX_SIZE) {
-                            height *= MAX_SIZE / width;
-                            width = MAX_SIZE;
-                          }
-                        } else {
-                          if (height > MAX_SIZE) {
-                            width *= MAX_SIZE / height;
-                            height = MAX_SIZE;
-                          }
-                        }
-                        
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // WebP 85% para máxima compressão e qualidade excelente
-                        const base64 = canvas.toDataURL("image/webp", 0.85);
-                        setImagem(base64);
-                      };
+                      setImageToCrop(event.target?.result as string);
+                      setCropOpen(true);
+                      e.target.value = ""; // limpa o input para poder enviar a mesma imagem dnv
                     };
                   }}
                   className="w-full rounded-xl border border-pink-100 p-2 text-sm outline-none file:mr-4 file:rounded-full file:border-0 file:bg-pink-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-pink-100" 
                 />
-                <div className="mt-2 text-center text-xs text-muted-foreground">Ou cole um link direto:</div>
-                <input value={imagem} onChange={e => setImagem(e.target.value)} placeholder="https://..." className="mt-1 w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
                 
-                {imagem && (
-                  <div className="mt-4 flex justify-center">
-                    <img src={imagem} alt="Preview" className="h-32 w-24 rounded-xl object-cover shadow-sm" />
+                {imagens.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {imagens.map((img, idx) => (
+                      <div key={idx} className="relative h-24 w-20 flex-shrink-0">
+                        <img src={img} className="h-full w-full rounded-xl object-cover shadow-sm" />
+                        <button 
+                          type="button"
+                          onClick={() => setImagens(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -323,6 +362,44 @@ function ProductsPanel({ token }: { token: string }) {
                 {mutation.isPending ? "Salvando..." : "Salvar Peça"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {cropOpen && imageToCrop && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <div className="flex h-full w-full max-w-lg flex-col rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-xl text-primary">Recortar Foto</h2>
+              <button onClick={() => setCropOpen(false)} className="rounded-full bg-pink-50 p-2 text-primary hover:bg-pink-100">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="relative flex-1 rounded-xl bg-black/5 overflow-hidden">
+              <Cropper
+                image={imageToCrop}
+                crop={crop}
+                zoom={zoom}
+                aspect={4 / 5} // Proporção padrão para moda
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(_, croppedPixels) => setCroppedAreaPixels(croppedPixels)}
+              />
+            </div>
+            
+            <button 
+              type="button"
+              onClick={async () => {
+                const cropped = await getCroppedImg(imageToCrop, croppedAreaPixels);
+                setImagens(prev => [...prev, cropped]);
+                setCropOpen(false);
+                setImageToCrop(null);
+              }}
+              className="mt-6 w-full rounded-full bg-primary py-3.5 font-semibold text-white transition hover:opacity-90"
+            >
+              Confirmar Recorte
+            </button>
           </div>
         </div>
       )}

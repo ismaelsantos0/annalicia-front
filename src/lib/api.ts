@@ -4,14 +4,23 @@ export async function fetchProdutos() {
   const res = await fetch(`${API_URL}/produtos`);
   if (!res.ok) throw new Error("Falha ao buscar produtos");
   const data = await res.json();
-  return data.map((p: any) => ({
-    id: p.id,
-    name: p.nome,
-    price: p.preco,
-    category: "Geral",
-    image: p.imagem_url,
-    stock: p.estoque,
-  }));
+  return data.map((p: any) => {
+    let parsedImages = [];
+    try {
+      const parsed = JSON.parse(p.imagem_url);
+      parsedImages = Array.isArray(parsed) ? parsed : [p.imagem_url];
+    } catch {
+      parsedImages = p.imagem_url ? [p.imagem_url] : [];
+    }
+    return {
+      id: p.id,
+      name: p.nome,
+      price: p.preco,
+      category: "Geral",
+      images: parsedImages,
+      stock: p.estoque,
+    };
+  });
 }
 
 export async function createProduto(token: string, dados: {

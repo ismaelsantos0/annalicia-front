@@ -55,7 +55,7 @@ export function CartDrawer() {
                   className="flex gap-4 rounded-2xl bg-pink-50/60 p-3"
                 >
                   <img
-                    src={item.image}
+                    src={item.images?.[0] || ""}
                     alt={item.name}
                     className="h-24 w-20 flex-none rounded-xl object-cover"
                   />

@@ -8,11 +8,19 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_15px_40px_-25px_rgba(236,72,153,0.35)] transition hover:-translate-y-1 hover:shadow-[0_20px_50px_-20px_rgba(236,72,153,0.45)]">
       <div className="relative aspect-[4/5] overflow-hidden bg-pink-50">
         <img
-          src={product.image}
+          src={product.images?.[0] || ""}
           alt={product.name}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className={`h-full w-full object-cover transition-transform duration-700 ${product.images?.length > 1 ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`}
         />
+        {product.images?.length > 1 && (
+          <img
+            src={product.images[1]}
+            alt={product.name}
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+          />
+        )}
         {product.tag && (
           <span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
             {product.tag}
