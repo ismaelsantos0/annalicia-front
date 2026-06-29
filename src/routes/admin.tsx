@@ -18,6 +18,8 @@ import {
   CreditCard,
   X,
   Minus,
+  Check,
+  ImageIcon
 } from "lucide-react";
 import Cropper from "react-easy-crop";
 import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista } from "../lib/api";
@@ -136,6 +138,12 @@ function AdminDashboard() {
               </button>
             );
           })}
+          <button
+            onClick={() => setTab("banners")}
+            className={`flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-semibold transition ${tab === "banners" ? "bg-primary text-primary-foreground shadow-md" : "text-foreground/70 hover:bg-pink-50 hover:text-primary"}`}
+          >
+            <ImageIcon className="h-4 w-4" /> Banners
+          </button>
         </nav>
         <div className="hidden border-t border-pink-100 p-4 md:block">
           <Link
@@ -169,6 +177,8 @@ function AdminDashboard() {
           <WhatsAppPanel token={token} />
         ) : tab === "pagamentos" ? (
           <PagamentosPanel token={token} />
+        ) : tab === "banners" ? (
+          <BannersPanel token={token} />
         ) : (
           <ProductsPanel token={token} />
         )}
@@ -1303,6 +1313,176 @@ function PagamentosPanel({ token }: { token: string }) {
           </table>
         </div>
       </div>
+    </>
+  );
+}
+
+
+function BannersPanel({ token }: { token: string }) {
+  const queryClient = useQueryClient();
+  const { data: banners = [], isLoading } = useQuery({
+    queryKey: ["banners"],
+    queryFn: fetchBanners,
+  });
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  
+  const [badgeText, setBadgeText] = useState("");
+  const [titleHighlight, setTitleHighlight] = useState("");
+  const [titleMain, setTitleMain] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [buttonText, setButtonText] = useState("Ver Looks");
+  const [buttonLink, setButtonLink] = useState("#looks");
+
+  const openEdit = (banner: any) => {
+    setEditId(banner.id);
+    setBadgeText(banner.badge_text || "");
+    setTitleHighlight(banner.title_highlight || "");
+    setTitleMain(banner.title_main || "");
+    setSubtitle(banner.subtitle || "");
+    setImageUrl(banner.image_url || "");
+    setButtonText(banner.button_text || "Ver Looks");
+    setButtonLink(banner.button_link || "#looks");
+    setModalOpen(true);
+  };
+
+  const openNew = () => {
+    setEditId(null);
+    setBadgeText("");
+    setTitleHighlight("");
+    setTitleMain("");
+    setSubtitle("");
+    setImageUrl("");
+    setButtonText("Ver Looks");
+    setButtonLink("#looks");
+    setModalOpen(true);
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: (dados: any) => editId ? updateBanner(token, editId, dados) : createBanner(token, dados),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["banners"] });
+      setModalOpen(false);
+    },
+    onError: (e) => alert(e.message)
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteBanner(token, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["banners"] })
+  });
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!imageUrl) return alert("A imagem é obrigatória.");
+    saveMutation.mutate({
+      badge_text: badgeText,
+      title_highlight: titleHighlight,
+      title_main: titleMain,
+      subtitle: subtitle,
+      image_url: imageUrl,
+      button_text: buttonText,
+      button_link: buttonLink
+    });
+  };
+
+  return (
+    <>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Aparência</p>
+          <h1 className="mt-1 font-display text-3xl sm:text-4xl">Banners (Carrossel)</h1>
+        </div>
+        <button
+          onClick={openNew}
+          className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-pink-600"
+        >
+          <Plus className="h-4 w-4" /> Novo Banner
+        </button>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {isLoading ? <p>Carregando...</p> : banners.map((b: any) => (
+          <div key={b.id} className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-pink-100">
+            <img src={b.image_url} alt="Banner" className="h-40 w-full object-cover" />
+            <div className="p-5">
+              <h3 className="font-display text-lg text-pink-900">{b.title_highlight} {b.title_main}</h3>
+              <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{b.subtitle}</p>
+              
+              <div className="mt-6 flex justify-end gap-2 border-t border-pink-50 pt-4">
+                <button
+                  onClick={() => openEdit(b)}
+                  className="rounded-full bg-pink-50 px-4 py-1.5 text-xs font-semibold text-pink-700 transition hover:bg-pink-100"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => { if(confirm("Excluir este banner?")) deleteMutation.mutate(b.id) }}
+                  className="rounded-full bg-red-50 px-4 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-100"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="font-display text-2xl">{editId ? "Editar Banner" : "Novo Banner"}</h2>
+              <button onClick={() => setModalOpen(false)} className="rounded-full p-2 hover:bg-pink-50"><X className="h-5 w-5" /></button>
+            </div>
+
+            <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-semibold">Badge (Topo)</label>
+                <input value={badgeText} onChange={e => setBadgeText(e.target.value)} placeholder="Ex: Drop de primavera ✨" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">Título (Destaque Rosa)</label>
+                  <input value={titleHighlight} onChange={e => setTitleHighlight(e.target.value)} placeholder="Coleção Primavera:" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">Título (Restante)</label>
+                  <input value={titleMain} onChange={e => setTitleMain(e.target.value)} placeholder="Seja Você Mesma!" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold">Subtítulo</label>
+                <textarea value={subtitle} onChange={e => setSubtitle(e.target.value)} rows={3} placeholder="Looks fofos..." className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary resize-none" />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold">URL da Imagem (Recomendado 1200x1500)</label>
+                <input required type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">Texto do Botão 1</label>
+                  <input value={buttonText} onChange={e => setButtonText(e.target.value)} placeholder="Ver Looks" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">Link do Botão 1</label>
+                  <input value={buttonLink} onChange={e => setButtonLink(e.target.value)} placeholder="#looks" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+              </div>
+
+              <button disabled={saveMutation.isPending} type="submit" className="w-full mt-6 rounded-xl bg-primary py-4 font-semibold text-white transition hover:bg-pink-600">
+                {saveMutation.isPending ? "Salvando..." : "Salvar Banner"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -39,35 +39,63 @@ function Storefront() {
     ? products 
     : products.filter(p => p.category === activeCategory);
 
+  const { data: banners = [] } = useQuery({
+    queryKey: ["banners"],
+    queryFn: fetchBanners,
+  });
+
+  const activeBanners = banners.filter((b: any) => b.ativo);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+
+  import { useEffect } from "react";
+  useEffect(() => {
+    if (activeBanners.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % activeBanners.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [activeBanners.length]);
+
+  const currentBanner = activeBanners[currentBannerIndex] || {
+    badge_text: "Drop de primavera ✨",
+    title_highlight: "Coleção Primavera:",
+    title_main: "Seja Você Mesma!",
+    subtitle: "Looks fofos, coquette e cheios de personalidade pra você arrasar em qualquer rolê. Encontre a peça que combina com a sua vibe. 💕",
+    image_url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80",
+    button_text: "Ver Looks",
+    button_link: "#looks"
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <CartDrawer />
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden transition-all duration-700 ease-in-out">
         <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-pink-200/50 blur-3xl" />
         <div className="absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-emerald-100 blur-3xl" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8 lg:py-24">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-mint px-3 py-1 text-xs font-semibold text-emerald-700">
-              <Sparkles className="h-3 w-3" />
-              Drop de primavera ✨
-            </span>
+          <div key={currentBannerIndex} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {currentBanner.badge_text && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-mint px-3 py-1 text-xs font-semibold text-emerald-700">
+                <Sparkles className="h-3 w-3" />
+                {currentBanner.badge_text}
+              </span>
+            )}
             <h1 className="mt-5 font-display text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
-              Coleção Primavera:{" "}
-              <span className="text-primary">Seja Você Mesma!</span>
+              {currentBanner.title_highlight}{" "}
+              <span className="text-primary">{currentBanner.title_main}</span>
             </h1>
             <p className="mt-5 max-w-md text-base text-muted-foreground">
-              Looks fofos, coquette e cheios de personalidade pra você arrasar
-              em qualquer rolê. Encontre a peça que combina com a sua vibe. 💕
+              {currentBanner.subtitle}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a
-                href="#looks"
+                href={currentBanner.button_link}
                 className="rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground shadow-[0_15px_30px_-10px_rgba(236,72,153,0.55)] transition hover:scale-105"
               >
-                Ver Looks
+                {currentBanner.button_text}
               </a>
               <a
                 href="#novidades"
@@ -76,6 +104,19 @@ function Storefront() {
                 Novidades
               </a>
             </div>
+            
+            {activeBanners.length > 1 && (
+              <div className="mt-8 flex gap-2">
+                {activeBanners.map((_: any, idx: number) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentBannerIndex(idx)}
+                    className={`h-2 rounded-full transition-all ${idx === currentBannerIndex ? 'w-8 bg-primary' : 'w-2 bg-pink-200 hover:bg-pink-300'}`}
+                  />
+                ))}
+              </div>
+            )}
+
             <div className="mt-10 flex flex-wrap gap-6 text-xs text-muted-foreground">
               <span className="flex items-center gap-2">
                 <Truck className="h-4 w-4 text-primary" /> Frete grátis acima de R$ 199
@@ -85,16 +126,16 @@ function Storefront() {
               </span>
             </div>
           </div>
-          <div className="relative">
-            <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-pink-200 via-pink-100 to-emerald-100 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2.5rem] shadow-[0_30px_60px_-20px_rgba(236,72,153,0.4)]">
+          <div className="relative" key={`img-${currentBannerIndex}`}>
+            <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-pink-200 via-pink-100 to-emerald-100 blur-2xl animate-pulse" />
+            <div className="relative overflow-hidden rounded-[2.5rem] shadow-[0_30px_60px_-20px_rgba(236,72,153,0.4)] animate-in fade-in zoom-in-95 duration-700">
               <img
-                src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80"
-                alt="Modelo com look da coleção primavera"
+                src={currentBanner.image_url}
+                alt="Banner principal"
                 className="aspect-[4/5] w-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white px-4 py-3 shadow-lg">
+            <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white px-4 py-3 shadow-lg animate-in slide-in-from-bottom-8 duration-700 delay-150">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                 Best seller
               </p>

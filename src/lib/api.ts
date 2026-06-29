@@ -288,3 +288,44 @@ export async function seedBoaVista(token: string) {
   if (!res.ok) throw new Error("Falha ao autocompletar bairros");
   return res.json();
 }
+
+export async function fetchBanners() {
+  const res = await fetch(`${API_URL}/banners`);
+  if (!res.ok) throw new Error("Falha ao buscar banners");
+  return res.json();
+}
+
+export async function createBanner(token: string, dados: any) {
+  const res = await fetch(`${API_URL}/banners`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) throw new Error("Falha ao criar banner");
+  return res.json();
+}
+
+export async function updateBanner(token: string, id: string, dados: any) {
+  const res = await fetch(`${API_URL}/banners/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) throw new Error("Falha ao atualizar banner");
+  return res.json();
+}
+
+export async function deleteBanner(token: string, id: string) {
+  const res = await fetch(`${API_URL}/banners/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Falha ao deletar banner");
+  return true;
+}
