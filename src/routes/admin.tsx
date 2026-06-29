@@ -36,18 +36,13 @@ export const Route = createFileRoute("/admin")({
   component: AdminDashboard,
 });
 
-type Tab = "dashboard" | "produtos" | "categorias" | "estoque" | "pedidos" | "marketing" | "configuracoes" | "whatsapp" | "pagamentos" | "banners";
+type Tab = "dashboard" | "catalogo" | "pedidos" | "marketing" | "configuracoes";
 
 const navItems = [
   { id: "dashboard" as Tab, label: "Dashboard", icon: PieChart },
-  { id: "produtos" as Tab, label: "Produtos", icon: Shirt },
-  { id: "categorias" as Tab, label: "Categorias", icon: Boxes },
-  { id: "estoque" as Tab, label: "Estoque", icon: Boxes },
+  { id: "catalogo" as Tab, label: "Catálogo", icon: Shirt },
   { id: "pedidos" as Tab, label: "Pedidos", icon: Receipt },
   { id: "marketing" as Tab, label: "Marketing", icon: Megaphone },
-  { id: "banners" as Tab, label: "Banners", icon: ImageIcon },
-  { id: "whatsapp" as Tab, label: "WhatsApp", icon: MessageCircle },
-  { id: "pagamentos" as Tab, label: "Pagamentos", icon: CreditCard },
   { id: "configuracoes" as Tab, label: "Configurações", icon: Settings },
 ];
 
@@ -143,12 +138,6 @@ function AdminDashboard() {
               </button>
             );
           })}
-          <button
-            onClick={() => setTab("banners")}
-            className={`flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-semibold transition ${tab === "banners" ? "bg-primary text-primary-foreground shadow-md" : "text-foreground/70 hover:bg-pink-50 hover:text-primary"}`}
-          >
-            <ImageIcon className="h-4 w-4" /> Banners
-          </button>
         </nav>
         <div className="hidden border-t border-pink-100 p-4 md:block">
           <Link
@@ -173,21 +162,11 @@ function AdminDashboard() {
         ) : tab === "pedidos" ? (
           <OrdersPanel token={token} />
         ) : tab === "marketing" ? (
-          <MarketingPanel token={token} />
-        ) : tab === "categorias" ? (
-          <CategoriasPanel token={token} />
-        ) : tab === "estoque" ? (
-          <EstoquePanel token={token} />
+          <MarketingTabs token={token} />
         ) : tab === "configuracoes" ? (
-          <ConfiguracoesPanel token={token} />
-        ) : tab === "whatsapp" ? (
-          <WhatsAppPanel token={token} />
-        ) : tab === "pagamentos" ? (
-          <PagamentosPanel token={token} />
-        ) : tab === "banners" ? (
-          <BannersPanel token={token} />
+          <ConfiguracoesTabs token={token} />
         ) : (
-          <ProductsPanel token={token} />
+          <CatalogoTabs token={token} />
         )}
       </main>
     </div>
@@ -1693,6 +1672,52 @@ function DashboardPanel({ token }: { token: string }) {
           </div>
         </div>
       </div>
+    </>
+  );
+}
+
+function CatalogoTabs({ token }: { token: string }) {
+  const [subTab, setSubTab] = useState("produtos");
+  return (
+    <>
+      <div className="mb-6 flex gap-4 border-b border-pink-100">
+        <button onClick={() => setSubTab("produtos")} className={`pb-3 text-sm font-semibold transition-colors ${subTab === "produtos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}>Produtos</button>
+        <button onClick={() => setSubTab("categorias")} className={`pb-3 text-sm font-semibold transition-colors ${subTab === "categorias" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}>Categorias</button>
+        <button onClick={() => setSubTab("estoque")} className={`pb-3 text-sm font-semibold transition-colors ${subTab === "estoque" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}>Estoque</button>
+      </div>
+      {subTab === "produtos" && <ProductsPanel token={token} />}
+      {subTab === "categorias" && <CategoriasPanel token={token} />}
+      {subTab === "estoque" && <EstoquePanel token={token} />}
+    </>
+  );
+}
+
+function MarketingTabs({ token }: { token: string }) {
+  const [subTab, setSubTab] = useState("clientes");
+  return (
+    <>
+      <div className="mb-6 flex gap-4 border-b border-pink-100">
+        <button onClick={() => setSubTab("clientes")} className={`pb-3 text-sm font-semibold transition-colors ${subTab === "clientes" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}>Clientes</button>
+        <button onClick={() => setSubTab("banners")} className={`pb-3 text-sm font-semibold transition-colors ${subTab === "banners" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}>Banners</button>
+      </div>
+      {subTab === "clientes" && <MarketingPanel token={token} />}
+      {subTab === "banners" && <BannersPanel token={token} />}
+    </>
+  );
+}
+
+function ConfiguracoesTabs({ token }: { token: string }) {
+  const [subTab, setSubTab] = useState("geral");
+  return (
+    <>
+      <div className="mb-6 flex gap-4 border-b border-pink-100">
+        <button onClick={() => setSubTab("geral")} className={`pb-3 text-sm font-semibold transition-colors ${subTab === "geral" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}>Geral</button>
+        <button onClick={() => setSubTab("pagamentos")} className={`pb-3 text-sm font-semibold transition-colors ${subTab === "pagamentos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}>Pagamentos</button>
+        <button onClick={() => setSubTab("whatsapp")} className={`pb-3 text-sm font-semibold transition-colors ${subTab === "whatsapp" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}>WhatsApp</button>
+      </div>
+      {subTab === "geral" && <ConfiguracoesPanel token={token} />}
+      {subTab === "pagamentos" && <PagamentosPanel token={token} />}
+      {subTab === "whatsapp" && <WhatsAppPanel token={token} />}
     </>
   );
 }
