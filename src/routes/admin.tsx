@@ -16,7 +16,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -154,6 +154,8 @@ function AdminDashboard() {
           <MarketingPanel token={token} />
         ) : tab === "categorias" ? (
           <CategoriasPanel token={token} />
+        ) : tab === "estoque" ? (
+          <EstoquePanel token={token} />
         ) : (
           <ProductsPanel token={token} />
         )}
@@ -675,6 +677,109 @@ function CategoriasPanel({ token }: { token: string }) {
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function EstoquePanel({ token }: { token: string }) {
+  const queryClient = useQueryClient();
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ["produtos"],
+    queryFn: fetchProdutos,
+  });
+
+  const mutation = useMutation({
+    mutationFn: ({ id, estoque }: { id: string; estoque: number }) => updateEstoqueProduto(token, id, estoque),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["produtos"] });
+    },
+    onError: (e) => alert(e.message)
+  });
+
+  const handleUpdate = (id: string, current: number, change: number) => {
+    const newStock = Math.max(0, current + change);
+    mutation.mutate({ id, estoque: newStock });
+  };
+
+  const handleDirectUpdate = (id: string, value: string) => {
+    const newStock = parseInt(value, 10);
+    if (!isNaN(newStock) && newStock >= 0) {
+      mutation.mutate({ id, estoque: newStock });
+    }
+  };
+
+  return (
+    <>
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Operacional</p>
+        <h1 className="mt-1 font-display text-3xl sm:text-4xl">Controle de Estoque</h1>
+      </div>
+
+      <div className="overflow-hidden rounded-3xl bg-white shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-pink-50/50 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <tr>
+                <th className="px-6 py-3 font-semibold">Foto</th>
+                <th className="px-6 py-3 font-semibold">Produto</th>
+                <th className="px-6 py-3 font-semibold">Qtd. Atual</th>
+                <th className="px-6 py-3 font-semibold text-center">Ajuste Rápido</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
+              ) : products.length === 0 ? (
+                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Nenhum produto cadastrado.</td></tr>
+              ) : products.map((p: any) => {
+                let badgeClass = "bg-mint text-emerald-700";
+                if (p.stock <= 1) badgeClass = "bg-red-100 text-red-700";
+                else if (p.stock <= 3) badgeClass = "bg-yellow-100 text-yellow-700";
+
+                return (
+                  <tr key={p.id} className="border-t border-pink-50 hover:bg-pink-50/40">
+                    <td className="px-6 py-4">
+                      <img src={p.images?.[0] || ""} alt={p.name} className="h-10 w-8 rounded-lg object-cover bg-pink-50" />
+                    </td>
+                    <td className="px-6 py-4 font-display text-base">{p.name}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>
+                        {p.stock} un.
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => handleUpdate(p.id, p.stock, -1)}
+                          disabled={mutation.isPending || p.stock === 0}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-50 text-primary transition hover:bg-pink-100 disabled:opacity-50"
+                        >
+                          -1
+                        </button>
+                        <input
+                          type="number"
+                          defaultValue={p.stock}
+                          key={p.stock} // força re-render quando o estoque muda
+                          onBlur={(e) => handleDirectUpdate(p.id, e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleDirectUpdate(p.id, (e.target as HTMLInputElement).value)}
+                          className="w-16 rounded-xl border border-pink-100 bg-transparent p-1.5 text-center text-sm outline-none focus:border-primary"
+                        />
+                        <button 
+                          onClick={() => handleUpdate(p.id, p.stock, 1)}
+                          disabled={mutation.isPending}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-50 text-primary transition hover:bg-pink-100 disabled:opacity-50"
+                        >
+                          +1
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -55,6 +55,19 @@ export async function deleteProduto(token: string, id: string) {
   return true;
 }
 
+export async function updateEstoqueProduto(token: string, id: string, estoque: number) {
+  const res = await fetch(`${API_URL}/produtos/${id}/estoque`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ estoque }),
+  });
+  if (!res.ok) throw new Error("Falha ao atualizar estoque");
+  return res.json();
+}
+
 export async function fetchCategorias() {
   const res = await fetch(`${API_URL}/categorias`);
   if (!res.ok) throw new Error("Falha ao buscar categorias");
