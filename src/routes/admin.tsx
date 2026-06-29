@@ -26,7 +26,7 @@ import {
   Star
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, loginAdmin, createProduto, deleteProduto, updateProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats, enviarDisparo, toggleDestaqueProduto } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, loginAdmin, createProduto, deleteProduto, updateProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats, enviarDisparo, toggleDestaqueProduto, verifyToken } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -58,6 +58,31 @@ function AdminDashboard() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [tab, setTab] = useState<Tab>("dashboard");
+  const [isVerifying, setIsVerifying] = useState(!!token);
+
+  useEffect(() => {
+    if (token) {
+      verifyToken(token)
+        .then(() => setIsVerifying(false))
+        .catch(() => {
+          setToken(null);
+          localStorage.removeItem("admin_token");
+          setIsVerifying(false);
+        });
+    } else {
+      setIsVerifying(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setToken(null);
+      localStorage.removeItem("admin_token");
+      setIsVerifying(false);
+    };
+    window.addEventListener("unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("unauthorized", handleUnauthorized);
+  }, []);
 
   const loginMutation = useMutation({
     mutationFn: () => loginAdmin(username, password),
@@ -67,6 +92,18 @@ function AdminDashboard() {
     },
     onError: (error) => alert(error.message || "Erro ao fazer login")
   });
+
+  if (isVerifying) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-pink-50 p-4">
+        <div className="relative flex h-20 w-20 items-center justify-center">
+          <div className="absolute h-full w-full animate-ping rounded-full bg-primary/20"></div>
+          <Sparkles className="h-10 w-10 animate-pulse text-primary" />
+        </div>
+        <p className="mt-4 animate-pulse font-display text-lg text-primary">Verificando acesso...</p>
+      </div>
+    );
+  }
 
   if (!token) {
     return (

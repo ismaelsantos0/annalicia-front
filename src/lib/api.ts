@@ -1,7 +1,8 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+﻿const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export async function fetchProdutos() {
   const res = await fetch(`${API_URL}/produtos`);
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao buscar produtos");
   const data = await res.json();
   return data.map((p: any, index: number) => {
@@ -30,7 +31,8 @@ export async function fetchDashboardStats(token: string) {
   const res = await fetch(`${API_URL}/pedidos/dashboard/stats`, {
     headers: { Authorization: `Bearer ${token}` }
   });
-  if (!res.ok) throw new Error("Falha ao buscar estatísticas");
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
+  if (!res.ok) throw new Error("Falha ao buscar estatÃ­sticas");
   return res.json();
 }
 
@@ -50,6 +52,7 @@ export async function createProduto(token: string, dados: {
     },
     body: JSON.stringify(dados),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || "Falha ao criar produto");
@@ -62,6 +65,7 @@ export async function deleteProduto(token: string, id: string) {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` }
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao deletar produto");
   return true;
 }
@@ -83,6 +87,7 @@ export async function updateProduto(token: string, id: string, dados: {
     },
     body: JSON.stringify(dados),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || "Falha ao atualizar produto");
@@ -99,12 +104,14 @@ export async function updateEstoqueProduto(token: string, id: string, estoque: n
     },
     body: JSON.stringify({ estoque }),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao atualizar estoque");
   return res.json();
 }
 
 export async function fetchCategorias() {
   const res = await fetch(`${API_URL}/categorias`);
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao buscar categorias");
   return res.json();
 }
@@ -118,6 +125,7 @@ export async function createCategoria(token: string, nome: string) {
     },
     body: JSON.stringify({ nome }),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao criar categoria");
   return res.json();
 }
@@ -127,6 +135,7 @@ export async function deleteCategoria(token: string, id: string) {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` }
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao deletar categoria");
   return true;
 }
@@ -136,7 +145,8 @@ export async function deleteConfiguracao(token: string, id: number) {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error("Falha ao deletar configuração");
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
+  if (!res.ok) throw new Error("Falha ao deletar configuraÃ§Ã£o");
   return true;
 }
 
@@ -144,6 +154,7 @@ export async function fetchWhatsAppStatus(token: string) {
   const res = await fetch(`${API_URL}/whatsapp/status`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao buscar status do WhatsApp");
   return res.json();
 }
@@ -152,6 +163,7 @@ export async function fetchWhatsAppQRCode(token: string) {
   const res = await fetch(`${API_URL}/whatsapp/qrcode`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || "Falha ao buscar QR Code");
@@ -164,6 +176,7 @@ export async function logoutWhatsApp(token: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao desconectar WhatsApp");
   return true;
 }
@@ -184,6 +197,7 @@ export async function createPedido(dados: {
     },
     body: JSON.stringify(dados),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || "Falha ao criar pedido");
@@ -195,6 +209,7 @@ export async function fetchClientes(token: string) {
   const res = await fetch(`${API_URL}/clientes`, {
     headers: { Authorization: `Bearer ${token}` }
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao buscar clientes");
   return res.json();
 }
@@ -208,6 +223,7 @@ export async function enviarDisparo(token: string, mensagem: string) {
     },
     body: JSON.stringify({ mensagem })
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
     const err = await res.json().catch(() => null);
     throw new Error(err?.detail || "Falha ao iniciar disparo");
@@ -219,6 +235,7 @@ export async function fetchPedidosAdmin(token: string) {
   const res = await fetch(`${API_URL}/pedidos`, {
     headers: { Authorization: `Bearer ${token}` }
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao buscar pedidos");
   return res.json();
 }
@@ -232,6 +249,7 @@ export async function updateOrderStatus(token: string, id: string, status: strin
     },
     body: JSON.stringify({ status })
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
     const errorData = await res.json().catch(() => null);
     throw new Error(errorData?.detail || "Falha ao atualizar status do pedido");
@@ -251,8 +269,9 @@ export async function loginAdmin(username: string, password: string) {
     },
     body: params.toString(),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
-    let msg = "Credenciais inválidas";
+    let msg = "Credenciais invÃ¡lidas";
     try {
       const err = await res.json();
       msg = err.detail || msg;
@@ -266,7 +285,8 @@ export async function fetchConfiguracoes(token?: string) {
   const headers: any = {};
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${API_URL}/configuracoes`, { headers });
-  if (!res.ok) throw new Error("Falha ao buscar configurações");
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
+  if (!res.ok) throw new Error("Falha ao buscar configuraÃ§Ãµes");
   return res.json();
 }
 
@@ -279,7 +299,8 @@ export async function updateConfiguracoes(token: string, dados: Record<string, a
     },
     body: JSON.stringify(dados),
   });
-  if (!res.ok) throw new Error("Falha ao atualizar configurações");
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
+  if (!res.ok) throw new Error("Falha ao atualizar configuraÃ§Ãµes");
   return res.json();
 }
 
@@ -296,6 +317,7 @@ export async function importFromInstagram(token: string, url: string): Promise<{
     },
     body: JSON.stringify({ url }),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || "Falha ao importar do Instagram");
@@ -305,6 +327,7 @@ export async function importFromInstagram(token: string, url: string): Promise<{
 
 export async function fetchZonasEntrega() {
   const res = await fetch(`${API_URL}/zonas-entrega`);
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao buscar zonas de entrega");
   return res.json();
 }
@@ -318,6 +341,7 @@ export async function createZonaEntrega(token: string, dados: { bairro: string; 
     },
     body: JSON.stringify(dados),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || "Falha ao criar zona de entrega");
@@ -334,6 +358,7 @@ export async function updateZonaEntrega(token: string, id: string, dados: { taxa
     },
     body: JSON.stringify(dados),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao atualizar zona de entrega");
   return res.json();
 }
@@ -343,6 +368,7 @@ export async function deleteZonaEntrega(token: string, id: string) {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` }
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao deletar zona de entrega");
   return true;
 }
@@ -352,12 +378,14 @@ export async function seedBoaVista(token: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` }
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao autocompletar bairros");
   return res.json();
 }
 
 export async function fetchBanners() {
   const res = await fetch(`${API_URL}/banners`);
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao buscar banners");
   return res.json();
 }
@@ -371,6 +399,7 @@ export async function createBanner(token: string, dados: any) {
     },
     body: JSON.stringify(dados),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao criar banner");
   return res.json();
 }
@@ -384,6 +413,7 @@ export async function updateBanner(token: string, id: string, dados: any) {
     },
     body: JSON.stringify(dados),
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao atualizar banner");
   return res.json();
 }
@@ -393,6 +423,7 @@ export async function deleteBanner(token: string, id: string) {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` }
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao deletar banner");
   return true;
 }
@@ -406,6 +437,7 @@ export async function toggleDestaqueProduto(token: string, id: string) {
     },
     body: JSON.stringify({})
   });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) {
     let msg = "Falha ao alterar destaque";
     try {
@@ -419,6 +451,7 @@ export async function toggleDestaqueProduto(token: string, id: string) {
 
 export async function fetchDestaques() {
   const res = await fetch(`${API_URL}/produtos/destaques`);
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error("Falha ao buscar destaques");
   const data = await res.json();
   return data.map((p: any) => {
@@ -439,4 +472,13 @@ export async function fetchDestaques() {
       destaque: p.destaque,
     };
   });
+}
+
+export async function verifyToken(token: string) {
+  const res = await fetch($(${API_URL})/auth/me, {
+    headers: { Authorization: Bearer $(${token}) }
+  });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
+  if (!res.ok) throw new Error('Token inválido');
+  return res.json();
 }
