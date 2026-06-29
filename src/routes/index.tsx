@@ -98,8 +98,8 @@ function Storefront() {
 
       {/* Hero */}
       <section className="relative overflow-hidden transition-all duration-700 ease-in-out">
-        <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-pink-200/50 blur-3xl" />
-        <div className="absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-emerald-100 blur-3xl" />
+        <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute top-1/2 right-0 h-64 w-64 -translate-y-1/2 translate-x-1/3 rounded-full bg-secondary/30 blur-3xl" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8 lg:py-24">
           <div key={currentBannerIndex} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             {currentBanner.badge_text && (
@@ -140,8 +140,8 @@ function Storefront() {
                 </a>
               ) : (
                 <a
-                  href="#novidades"
-                  className="rounded-full border-2 border-primary/20 bg-white px-6 py-3.5 text-sm font-semibold text-primary transition hover:bg-pink-50"
+                  href="#produtos"
+                  className="rounded-full border-2 border-primary/20 bg-card px-6 py-3.5 text-sm font-semibold text-primary transition hover:bg-secondary/20"
                 >
                   Novidades
                 </a>
@@ -249,7 +249,7 @@ function Storefront() {
             className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
               activeCategory === "Todos"
                 ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-pink-50 text-foreground hover:bg-pink-100 hover:text-primary"
+                : "bg-secondary/20 text-foreground hover:bg-secondary/40 hover:text-primary"
             }`}
           >
             Todos
@@ -261,7 +261,7 @@ function Storefront() {
               className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
                 activeCategory === cat.nome
                   ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-pink-50 text-foreground hover:bg-pink-100 hover:text-primary"
+                  : "bg-secondary/20 text-foreground hover:bg-secondary/40 hover:text-primary"
               }`}
             >
               {cat.nome}
