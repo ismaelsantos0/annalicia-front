@@ -137,6 +137,9 @@ export async function createPedido(dados: {
   cliente_nome: string;
   cliente_whatsapp: string;
   cliente_endereco: string;
+  tipo_entrega?: string;
+  bairro_entrega?: string;
+  taxa_entrega?: number;
   itens: { produto_id: string; quantidade: number }[];
 }) {
   const res = await fetch(`${API_URL}/pedidos`, {
@@ -231,4 +234,48 @@ export async function importFromInstagram(token: string, url: string): Promise<{
     throw new Error(err.detail || "Falha ao importar do Instagram");
   }
   return res.json();
+}
+
+export async function fetchZonasEntrega() {
+  const res = await fetch(`${API_URL}/zonas-entrega`);
+  if (!res.ok) throw new Error("Falha ao buscar zonas de entrega");
+  return res.json();
+}
+
+export async function createZonaEntrega(token: string, dados: { bairro: string; taxa: number; ativo: boolean }) {
+  const res = await fetch(`${API_URL}/zonas-entrega`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Falha ao criar zona de entrega");
+  }
+  return res.json();
+}
+
+export async function updateZonaEntrega(token: string, id: string, dados: { taxa?: number; ativo?: boolean }) {
+  const res = await fetch(`${API_URL}/zonas-entrega/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) throw new Error("Falha ao atualizar zona de entrega");
+  return res.json();
+}
+
+export async function deleteZonaEntrega(token: string, id: string) {
+  const res = await fetch(`${API_URL}/zonas-entrega/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Falha ao deletar zona de entrega");
+  return true;
 }

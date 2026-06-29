@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -1037,6 +1037,37 @@ function PagamentosPanel({ token }: { token: string }) {
     onError: (e) => alert(e.message)
   });
 
+  // Zonas de Entrega
+  const { data: zonas = [], isLoading: loadingZonas } = useQuery({
+    queryKey: ["zonas-entrega"],
+    queryFn: fetchZonasEntrega,
+  });
+
+  const [novoBairro, setNovoBairro] = useState("");
+  const [novaTaxa, setNovaTaxa] = useState("");
+  
+  const createZonaMutation = useMutation({
+    mutationFn: () => createZonaEntrega(token, { bairro: novoBairro.trim(), taxa: parseFloat(novaTaxa.replace(",", ".")), ativo: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zonas-entrega"] });
+      setNovoBairro("");
+      setNovaTaxa("");
+    },
+    onError: (e: any) => alert(e.message)
+  });
+
+  const updateZonaMutation = useMutation({
+    mutationFn: ({ id, taxa, ativo }: { id: string; taxa?: number; ativo?: boolean }) => updateZonaEntrega(token, id, { taxa, ativo }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["zonas-entrega"] }),
+    onError: (e: any) => alert(e.message)
+  });
+
+  const deleteZonaMutation = useMutation({
+    mutationFn: (id: string) => deleteZonaEntrega(token, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["zonas-entrega"] }),
+    onError: (e: any) => alert(e.message)
+  });
+
   return (
     <>
       <div className="mb-8">
@@ -1129,6 +1160,95 @@ function PagamentosPanel({ token }: { token: string }) {
             {mutation.isPending ? "Salvando..." : "Salvar Configurações PIX"}
           </button>
         </form>
+      </div>
+
+      <div className="mt-8 max-w-2xl rounded-3xl bg-white p-6 sm:p-8 shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
+        <h2 className="font-display text-xl mb-2">Zonas de Entrega</h2>
+        <p className="text-sm text-muted-foreground mb-6">Cadastre os bairros atendidos e suas respectivas taxas de entrega.</p>
+        
+        <form 
+          onSubmit={e => { e.preventDefault(); createZonaMutation.mutate(); }}
+          className="flex flex-col sm:flex-row gap-4 items-end mb-6 bg-pink-50/50 p-4 rounded-2xl border border-pink-100"
+        >
+          <div className="flex-1 w-full">
+            <label className="mb-1 block text-sm font-medium text-foreground/80">Novo Bairro</label>
+            <input
+              required
+              type="text"
+              value={novoBairro}
+              onChange={e => setNovoBairro(e.target.value)}
+              placeholder="Ex: Centro"
+              className="w-full rounded-xl border border-pink-100 p-2.5 outline-none focus:border-primary"
+            />
+          </div>
+          <div className="w-full sm:w-32">
+            <label className="mb-1 block text-sm font-medium text-foreground/80">Taxa (R$)</label>
+            <input
+              required
+              type="number"
+              step="0.01"
+              value={novaTaxa}
+              onChange={e => setNovaTaxa(e.target.value)}
+              placeholder="Ex: 5.00"
+              className="w-full rounded-xl border border-pink-100 p-2.5 outline-none focus:border-primary"
+            />
+          </div>
+          <button 
+            type="submit"
+            disabled={createZonaMutation.isPending || !novoBairro.trim() || !novaTaxa.trim()}
+            className="w-full sm:w-auto rounded-xl bg-primary px-6 py-2.5 font-semibold text-white transition hover:opacity-90 disabled:opacity-50 h-[46px]"
+          >
+            Adicionar
+          </button>
+        </form>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-pink-100 text-muted-foreground">
+                <th className="pb-3 font-medium">Bairro</th>
+                <th className="pb-3 font-medium">Taxa de Entrega</th>
+                <th className="pb-3 font-medium text-center">Status</th>
+                <th className="pb-3 font-medium text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loadingZonas ? (
+                <tr><td colSpan={4} className="py-4 text-center text-muted-foreground">Carregando...</td></tr>
+              ) : zonas.length === 0 ? (
+                <tr><td colSpan={4} className="py-4 text-center text-muted-foreground">Nenhuma zona de entrega cadastrada.</td></tr>
+              ) : (
+                zonas.map((z: any) => (
+                  <tr key={z.id} className="border-b border-pink-50 last:border-0 group">
+                    <td className="py-3 font-medium text-foreground/80">{z.bairro}</td>
+                    <td className="py-3">{formatBRL(z.taxa)}</td>
+                    <td className="py-3 text-center">
+                      <button 
+                        onClick={() => updateZonaMutation.mutate({ id: z.id, ativo: !z.ativo })}
+                        className={`text-xs px-2 py-1 rounded-full font-medium ${z.ativo ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}
+                      >
+                        {z.ativo ? "Ativo" : "Inativo"}
+                      </button>
+                    </td>
+                    <td className="py-3 text-right">
+                      <button
+                        onClick={() => {
+                          if (confirm(`Remover taxa do bairro ${z.bairro}?`)) {
+                            deleteZonaMutation.mutate(z.id);
+                          }
+                        }}
+                        className="text-muted-foreground hover:text-red-500 transition"
+                        title="Remover"
+                      >
+                        <Trash2 className="h-4 w-4 inline" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </>
   );
