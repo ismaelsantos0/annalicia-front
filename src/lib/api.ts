@@ -200,7 +200,7 @@ export async function fetchConfiguracoes(token: string) {
   return res.json();
 }
 
-export async function updateConfiguracoes(token: string, dados: { estoque_critico: number; estoque_atencao: number }) {
+export async function updateConfiguracoes(token: string, dados: Record<string, any>) {
   const res = await fetch(`${API_URL}/configuracoes`, {
     method: "PATCH",
     headers: {
@@ -210,5 +210,25 @@ export async function updateConfiguracoes(token: string, dados: { estoque_critic
     body: JSON.stringify(dados),
   });
   if (!res.ok) throw new Error("Falha ao atualizar configurações");
+  return res.json();
+}
+
+export async function importFromInstagram(token: string, url: string): Promise<{
+  images: string[];
+  caption: string;
+  nome_sugerido: string;
+}> {
+  const res = await fetch(`${API_URL}/produtos/import-instagram`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ url }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Falha ao importar do Instagram");
+  }
   return res.json();
 }
