@@ -1070,23 +1070,26 @@ function ConfiguracoesPanel({ token }: { token: string }) {
     queryFn: () => fetchConfiguracoes(token),
   });
 
-  if (config && !isLoading && !queryClient.isMutating()) {
-    if (config.estoque_critico.toString() !== critico) setCritico(config.estoque_critico.toString());
-    if (config.estoque_atencao.toString() !== atencao) setAtencao(config.estoque_atencao.toString());
-    if (config.whatsapp_loja && config.whatsapp_loja !== whatsappLoja) setWhatsappLoja(config.whatsapp_loja);
-    if (config.link_instagram && config.link_instagram !== linkInstagram) setLinkInstagram(config.link_instagram);
-    if (config.link_tiktok && config.link_tiktok !== linkTiktok) setLinkTiktok(config.link_tiktok);
-    if (config.popup_ativo !== popupAtivo) setPopupAtivo(config.popup_ativo);
-    if (config.popup_titulo && config.popup_titulo !== popupTitulo) setPopupTitulo(config.popup_titulo);
-    if (config.popup_texto && config.popup_texto !== popupTexto) setPopupTexto(config.popup_texto);
-    if (config.popup_imagem && config.popup_imagem !== popupImagem) setPopupImagem(config.popup_imagem);
-    if (config.popup_botao_texto && config.popup_botao_texto !== popupBotaoTexto) setPopupBotaoTexto(config.popup_botao_texto);
-    if (config.popup_botao_link && config.popup_botao_link !== popupBotaoLink) setPopupBotaoLink(config.popup_botao_link);
-    if (config.texto_frete && config.texto_frete !== textoFrete) setTextoFrete(config.texto_frete);
-    if (config.texto_brinde && config.texto_brinde !== textoBrinde) setTextoBrinde(config.texto_brinde);
-    if (config.titulo_destaques && config.titulo_destaques !== tituloDestaques) setTituloDestaques(config.titulo_destaques);
-    if (config.categoria_destaque_id && config.categoria_destaque_id !== categoriaDestaqueId) setCategoriaDestaqueId(config.categoria_destaque_id);
-  }
+  useEffect(() => {
+    if (config && !isLoading) {
+      setCritico(config.estoque_critico?.toString() || "1");
+      setAtencao(config.estoque_atencao?.toString() || "3");
+      if (config.whatsapp_loja) setWhatsappLoja(config.whatsapp_loja);
+      if (config.link_instagram) setLinkInstagram(config.link_instagram);
+      if (config.link_tiktok) setLinkTiktok(config.link_tiktok);
+      setPopupAtivo(!!config.popup_ativo);
+      if (config.popup_titulo) setPopupTitulo(config.popup_titulo);
+      if (config.popup_texto) setPopupTexto(config.popup_texto);
+      if (config.popup_imagem) setPopupImagem(config.popup_imagem);
+      if (config.popup_botao_texto) setPopupBotaoTexto(config.popup_botao_texto);
+      if (config.popup_botao_link) setPopupBotaoLink(config.popup_botao_link);
+      if (config.texto_frete) setTextoFrete(config.texto_frete);
+      if (config.texto_brinde) setTextoBrinde(config.texto_brinde);
+      if (config.titulo_destaques) setTituloDestaques(config.titulo_destaques);
+      if (config.categoria_destaque_id) setCategoriaDestaqueId(config.categoria_destaque_id);
+    }
+  }, [config, isLoading]);
+
 
   const mutation = useMutation({
     mutationFn: () => updateConfiguracoes(token, {
