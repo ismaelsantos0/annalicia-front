@@ -93,7 +93,8 @@ export function CartDrawer() {
                           onClick={() =>
                             updateQuantity(item.id, item.quantity + 1)
                           }
-                          className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground hover:opacity-90"
+                          disabled={item.quantity >= item.stock}
+                          className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                           aria-label="Aumentar"
                         >
                           <Plus className="h-3 w-3" />

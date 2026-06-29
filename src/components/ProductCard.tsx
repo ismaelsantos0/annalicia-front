@@ -45,9 +45,10 @@ export function ProductCard({ product }: { product: Product }) {
         </p>
         <button
           onClick={() => addItem(product)}
-          className="mt-4 w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_20px_-10px_rgba(236,72,153,0.6)] transition hover:opacity-90"
+          disabled={product.stock === 0}
+          className="mt-4 w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_20px_-10px_rgba(236,72,153,0.6)] transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Comprar
+          {product.stock === 0 ? "Esgotado" : "Comprar"}
         </button>
       </div>
     </article>
