@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { Minus, Plus, Trash2, X, ShoppingBag } from "lucide-react";
 import { useCart } from "../lib/cart-context";
 import { formatBRL } from "../lib/products";
+import { CheckoutModal } from "./CheckoutModal";
 
 export function CartDrawer() {
   const { isOpen, closeCart, items, updateQuantity, removeItem, total } =
     useCart();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
 
   return (
     <>
