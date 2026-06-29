@@ -92,8 +92,16 @@ export function CheckoutModal({ open, onClose }: Props) {
             </p>
             <div className="my-6 w-full rounded-2xl bg-yellow-50 border border-yellow-200 p-4 text-left">
               <h3 className="font-semibold text-yellow-800 text-sm mb-2">Finalize seu pagamento:</h3>
-              <p className="text-xs text-yellow-700 mb-3">Copie o código abaixo e pague no seu aplicativo do banco via <b>PIX Copia e Cola</b>. O pedido será processado assim que for aprovado.</p>
+              <p className="text-xs text-yellow-700 mb-3">Escaneie o QR Code ou copie o código abaixo e pague no seu aplicativo do banco via <b>PIX Copia e Cola</b>. O pedido será processado assim que for aprovado.</p>
               
+              <div className="mb-4 flex justify-center bg-white rounded-xl p-4 border border-yellow-100">
+                <img 
+                  src={`https://quickchart.io/qr?text=${encodeURIComponent(successData.pix_copia_cola)}&size=200`} 
+                  alt="QR Code PIX" 
+                  className="w-40 h-40 object-contain"
+                />
+              </div>
+
               <div className="relative">
                 <textarea 
                   readOnly 
