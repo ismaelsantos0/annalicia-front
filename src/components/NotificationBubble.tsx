@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle, X, Sparkles, Send } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { inscreverNotificacoes, fetchConfiguracoes } from "../lib/api";
@@ -17,20 +17,18 @@ export function NotificationBubble() {
     }
   }, []);
 
-  const { data: configs = [] } = useQuery({
+  const { data: config = {} as any } = useQuery({
     queryKey: ["config"],
-    queryFn: fetchConfiguracoes,
+    queryFn: () => fetchConfiguracoes(),
   });
-
-  const configMap = configs.reduce((acc: any, c: any) => ({ ...acc, [c.chave]: c.valor }), {});
   
-  if (configMap.popup_ativo !== "true" || dismissed) {
+  if (!config.popup_ativo || dismissed) {
     return null;
   }
 
-  const titulo = configMap.popup_titulo || "Quer receber novidades?";
-  const texto = configMap.popup_texto || "Deixe seu WhatsApp para ser avisado sobre novas peças e promoções exclusivas!";
-  const botao = configMap.popup_botao_texto || "Me avise!";
+  const titulo = config.popup_titulo || "Quer receber novidades?";
+  const texto = config.popup_texto || "Deixe seu WhatsApp para ser avisado sobre novas peças e promoções exclusivas!";
+  const botao = config.popup_botao_texto || "Me avise!";
 
   const handleWhatsappChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setWhatsapp(formatWhatsApp(e.target.value));
