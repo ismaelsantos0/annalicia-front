@@ -121,13 +121,22 @@ export function CartDrawer() {
           </div>
           <button
             disabled={items.length === 0}
-            onClick={() => alert("Finalizando sua compra... 💖")}
+            onClick={() => {
+              closeCart();
+              setCheckoutOpen(true);
+            }}
             className="w-full rounded-full bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_10px_25px_-10px_rgba(236,72,153,0.6)] transition hover:opacity-90 disabled:opacity-40"
           >
             Finalizar Compra
           </button>
         </div>
       </aside>
+
+      <CheckoutModal
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+      />
     </>
   );
 }
+
