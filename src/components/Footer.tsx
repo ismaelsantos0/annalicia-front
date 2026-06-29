@@ -13,20 +13,14 @@ export function Footer() {
   const [nomePrimeiro, ...nomeResto] = nomeLoja.split(" ");
 
   return (
-    <footer className="mt-24 border-t border-pink-100 bg-pink-50/60">
+    <footer className="mt-24 border-t border-border bg-background">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-10 sm:flex-row sm:justify-between sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
-          {config?.logo_url ? (
-            <img
-              src={config.logo_url}
-              alt={nomeLoja}
-              className="h-7 w-7 rounded-full object-cover"
-            />
-          ) : (
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground">
-              <Sparkles className="h-3 w-3" />
-            </span>
-          )}
+          <img
+            src={config?.logo_url || "/logo.jpg"}
+            alt={nomeLoja}
+            className="h-7 w-7 rounded-full object-cover"
+          />
           <p className="font-display text-lg text-primary">
             {nomePrimeiro} <span className="text-foreground">{nomeResto.join(" ")}</span>
           </p>
@@ -38,7 +32,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="TikTok"
-              className="grid h-10 w-10 place-items-center rounded-full bg-white text-primary shadow-sm transition hover:scale-110"
+              className="grid h-10 w-10 place-items-center rounded-full bg-card text-primary shadow-sm transition hover:scale-110"
             >
               <Music2 className="h-4 w-4" />
             </a>
@@ -49,7 +43,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="grid h-10 w-10 place-items-center rounded-full bg-white text-primary shadow-sm transition hover:scale-110"
+              className="grid h-10 w-10 place-items-center rounded-full bg-card text-primary shadow-sm transition hover:scale-110"
             >
               <Instagram className="h-4 w-4" />
             </a>
