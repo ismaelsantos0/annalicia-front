@@ -279,3 +279,12 @@ export async function deleteZonaEntrega(token: string, id: string) {
   if (!res.ok) throw new Error("Falha ao deletar zona de entrega");
   return true;
 }
+
+export async function seedBoaVista(token: string) {
+  const res = await fetch(`${API_URL}/zonas-entrega/seed-boa-vista`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Falha ao autocompletar bairros");
+  return res.json();
+}

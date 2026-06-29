@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -1068,6 +1068,15 @@ function PagamentosPanel({ token }: { token: string }) {
     onError: (e: any) => alert(e.message)
   });
 
+  const seedMutation = useMutation({
+    mutationFn: () => seedBoaVista(token),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["zonas-entrega"] });
+      alert(data.message);
+    },
+    onError: (e: any) => alert(e.message)
+  });
+
   return (
     <>
       <div className="mb-8">
@@ -1163,7 +1172,17 @@ function PagamentosPanel({ token }: { token: string }) {
       </div>
 
       <div className="mt-8 max-w-2xl rounded-3xl bg-white p-6 sm:p-8 shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
-        <h2 className="font-display text-xl mb-2">Zonas de Entrega</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
+          <h2 className="font-display text-xl">Zonas de Entrega</h2>
+          <button 
+            type="button"
+            onClick={() => { if(confirm("Deseja adicionar os 39 bairros de Boa Vista com uma taxa padrão de R$ 10,00? Você poderá alterar as taxas depois.")) seedMutation.mutate(); }}
+            disabled={seedMutation.isPending}
+            className="text-xs font-semibold text-purple-600 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-full transition"
+          >
+            {seedMutation.isPending ? "Preenchendo..." : "✨ Preencher Bairros de Boa Vista"}
+          </button>
+        </div>
         <p className="text-sm text-muted-foreground mb-6">Cadastre os bairros atendidos e suas respectivas taxas de entrega.</p>
         
         <form 
