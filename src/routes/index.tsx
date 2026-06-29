@@ -4,6 +4,7 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { CartDrawer } from "../components/CartDrawer";
 import { ProductCard } from "../components/ProductCard";
+import { NotificationBubble } from "../components/NotificationBubble";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProdutos, fetchCategorias, fetchBanners, fetchConfiguracoes, fetchDestaques } from "../lib/api";
 import { useState, useEffect } from "react";
@@ -304,73 +305,11 @@ function Storefront() {
             ))}
           </div>
         )}
+        <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+        <NotificationBubble />
       </section>
 
       <Footer />
-    </div>
-  );
-}
-
-function PromoPopup({ config }: { config: any }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!config?.popup_ativo) return;
-    
-    // Check if popup was closed in the last 24 hours
-    const lastClosed = localStorage.getItem("promo_popup_closed");
-    if (lastClosed) {
-      const timeSinceClosed = Date.now() - parseInt(lastClosed, 10);
-      const hours24 = 24 * 60 * 60 * 1000;
-      if (timeSinceClosed < hours24) return; // Don't show
-    }
-
-    // Delay popup slightly for better UX
-    const timer = setTimeout(() => setIsOpen(true), 2500);
-    return () => clearTimeout(timer);
-  }, [config]);
-
-  const handleClose = () => {
-    setIsOpen(false);
-    localStorage.setItem("promo_popup_closed", Date.now().toString());
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animate-in zoom-in-95 duration-300">
-        <button 
-          onClick={handleClose} 
-          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/10 text-white backdrop-blur-md transition hover:bg-black/20"
-        >
-          <X className="h-4 w-4" />
-        </button>
-        
-        {config.popup_imagem && (
-          <img src={config.popup_imagem} alt="Promo" className="h-48 w-full object-cover" />
-        )}
-        
-        <div className={`p-8 text-center ${!config.popup_imagem && 'pt-12'}`}>
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-pink-100 text-primary">
-            <Gift className="h-6 w-6" />
-          </div>
-          <h2 className="font-display text-3xl">{config.popup_titulo || "Novidade para você!"}</h2>
-          <p className="mt-3 text-muted-foreground leading-relaxed">
-            {config.popup_texto}
-          </p>
-          
-          {(config.popup_botao_texto || config.popup_botao_link) && (
-            <a
-              href={config.popup_botao_link || "#"}
-              onClick={handleClose}
-              className="mt-8 inline-block w-full rounded-full bg-primary px-6 py-4 font-semibold text-white shadow-lg shadow-pink-500/30 transition hover:bg-pink-600 hover:scale-105"
-            >
-              {config.popup_botao_texto || "Aproveitar"}
-            </a>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

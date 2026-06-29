@@ -216,6 +216,20 @@ export async function fetchClientes(token: string) {
   return res.json();
 }
 
+export async function inscreverNotificacoes(nome: string, whatsapp: string) {
+  const res = await fetch(`${API_URL}/clientes/inscrever`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nome, whatsapp })
+  });
+  if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || "Falha ao se inscrever");
+  }
+  return res.json();
+}
+
 export async function enviarDisparo(token: string, mensagem: string) {
   const res = await fetch(`${API_URL}/clientes/disparo`, {
     method: "POST",
