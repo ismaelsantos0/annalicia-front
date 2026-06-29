@@ -116,27 +116,25 @@ function AdminDashboard() {
 
   if (isVerifying) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-pink-50 p-4">
-        <div className="relative flex h-20 w-20 items-center justify-center">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <div className="relative flex h-24 w-24 items-center justify-center">
           <div className="absolute h-full w-full animate-ping rounded-full bg-primary/20"></div>
-          <Sparkles className="h-10 w-10 animate-pulse text-primary" />
+          <img src="/logo.jpg" alt="Logo" className="relative z-10 h-20 w-20 rounded-full object-cover shadow-lg" />
         </div>
-        <p className="mt-4 animate-pulse font-display text-lg text-primary">Verificando acesso...</p>
+        <p className="mt-6 animate-pulse font-display text-lg text-primary">Verificando acesso...</p>
       </div>
     );
   }
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-pink-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <form 
           onSubmit={(e) => { e.preventDefault(); loginMutation.mutate(); }}
-          className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-xl"
+          className="w-full max-w-sm rounded-3xl bg-card p-8 shadow-xl"
         >
           <div className="mb-8 text-center">
-            <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-primary text-white">
-              <Sparkles className="h-6 w-6" />
-            </span>
+            <img src="/logo.jpg" alt="Logo" className="mx-auto h-20 w-20 rounded-full object-cover shadow-md" />
             <h1 className="mt-4 font-display text-2xl text-primary">Admin Loja</h1>
           </div>
           <div className="space-y-4">
@@ -144,14 +142,14 @@ function AdminDashboard() {
               placeholder="Usuário"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+              className="w-full rounded-xl border border-border bg-background text-foreground p-3 outline-none focus:border-primary"
             />
             <input
               type="password"
               placeholder="Senha"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+              className="w-full rounded-xl border border-border bg-background text-foreground p-3 outline-none focus:border-primary"
             />
             <button 
               type="submit"
@@ -168,13 +166,11 @@ function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="border-b border-pink-100 bg-white md:w-64 md:border-b-0 md:border-r">
-        <div className="border-b border-pink-100 px-6 py-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <span className="font-display text-lg text-primary">Annalicia</span>
+      <aside className="border-b border-border bg-card md:w-64 md:border-b-0 md:border-r">
+        <div className="border-b border-border px-6 py-6">
+          <Link to="/" className="flex items-center gap-3">
+            <img src="/logo.jpg" alt="Logo" className="h-10 w-10 rounded-full object-cover shadow-sm" />
+            <span className="font-display text-xl text-primary">Annalicia</span>
           </Link>
           <p className="mt-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Painel Admin
