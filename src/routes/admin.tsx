@@ -837,6 +837,14 @@ function ConfiguracoesPanel({ token }: { token: string }) {
   const [critico, setCritico] = useState("1");
   const [atencao, setAtencao] = useState("3");
   const [whatsappLoja, setWhatsappLoja] = useState("");
+  const [linkInstagram, setLinkInstagram] = useState("");
+  const [linkTiktok, setLinkTiktok] = useState("");
+  const [popupAtivo, setPopupAtivo] = useState(false);
+  const [popupTitulo, setPopupTitulo] = useState("");
+  const [popupTexto, setPopupTexto] = useState("");
+  const [popupImagem, setPopupImagem] = useState("");
+  const [popupBotaoTexto, setPopupBotaoTexto] = useState("");
+  const [popupBotaoLink, setPopupBotaoLink] = useState("");
 
   const { data: config, isLoading } = useQuery({
     queryKey: ["configuracoes"],
@@ -847,13 +855,29 @@ function ConfiguracoesPanel({ token }: { token: string }) {
     if (config.estoque_critico.toString() !== critico) setCritico(config.estoque_critico.toString());
     if (config.estoque_atencao.toString() !== atencao) setAtencao(config.estoque_atencao.toString());
     if (config.whatsapp_loja && config.whatsapp_loja !== whatsappLoja) setWhatsappLoja(config.whatsapp_loja);
+    if (config.link_instagram && config.link_instagram !== linkInstagram) setLinkInstagram(config.link_instagram);
+    if (config.link_tiktok && config.link_tiktok !== linkTiktok) setLinkTiktok(config.link_tiktok);
+    if (config.popup_ativo !== popupAtivo) setPopupAtivo(config.popup_ativo);
+    if (config.popup_titulo && config.popup_titulo !== popupTitulo) setPopupTitulo(config.popup_titulo);
+    if (config.popup_texto && config.popup_texto !== popupTexto) setPopupTexto(config.popup_texto);
+    if (config.popup_imagem && config.popup_imagem !== popupImagem) setPopupImagem(config.popup_imagem);
+    if (config.popup_botao_texto && config.popup_botao_texto !== popupBotaoTexto) setPopupBotaoTexto(config.popup_botao_texto);
+    if (config.popup_botao_link && config.popup_botao_link !== popupBotaoLink) setPopupBotaoLink(config.popup_botao_link);
   }
 
   const mutation = useMutation({
     mutationFn: () => updateConfiguracoes(token, {
       estoque_critico: parseInt(critico, 10),
       estoque_atencao: parseInt(atencao, 10),
-      whatsapp_loja: whatsappLoja.replace(/\D/g, "")
+      whatsapp_loja: whatsappLoja.replace(/\D/g, ""),
+      link_instagram: linkInstagram,
+      link_tiktok: linkTiktok,
+      popup_ativo: popupAtivo,
+      popup_titulo: popupTitulo,
+      popup_texto: popupTexto,
+      popup_imagem: popupImagem,
+      popup_botao_texto: popupBotaoTexto,
+      popup_botao_link: popupBotaoLink
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["configuracoes"] });
@@ -938,6 +962,43 @@ function ConfiguracoesPanel({ token }: { token: string }) {
                   className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
                 />
               </div>
+            </div>
+
+            <div className="pt-8 border-t border-pink-50">
+              <h3 className="mb-4 text-lg font-display text-pink-900 flex items-center justify-between">
+                Popup Promocional
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={popupAtivo} onChange={e => setPopupAtivo(e.target.checked)} className="h-5 w-5 accent-primary" />
+                  <span className="text-sm font-medium">Ativar Popup</span>
+                </label>
+              </h3>
+              
+              {popupAtivo && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">Título do Popup</label>
+                    <input type="text" value={popupTitulo} onChange={e => setPopupTitulo(e.target.value)} placeholder="Ex: Ganhe 10% OFF!" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">Texto do Popup</label>
+                    <textarea value={popupTexto} onChange={e => setPopupTexto(e.target.value)} rows={3} placeholder="Insira seu e-mail para receber o cupom..." className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary resize-none" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">URL da Imagem (Opcional)</label>
+                    <input type="url" value={popupImagem} onChange={e => setPopupImagem(e.target.value)} placeholder="https://..." className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1 block text-sm font-semibold">Texto do Botão</label>
+                      <input type="text" value={popupBotaoTexto} onChange={e => setPopupBotaoTexto(e.target.value)} placeholder="Pegar Cupom" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-semibold">Link do Botão</label>
+                      <input type="text" value={popupBotaoLink} onChange={e => setPopupBotaoLink(e.target.value)} placeholder="/colecao-nova" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button 
@@ -1357,6 +1418,9 @@ function BannersPanel({ token }: { token: string }) {
   const [imageUrl, setImageUrl] = useState("");
   const [buttonText, setButtonText] = useState("Ver Looks");
   const [buttonLink, setButtonLink] = useState("#looks");
+  const [button2Text, setButton2Text] = useState("");
+  const [button2Link, setButton2Link] = useState("");
+  const [corDestaque, setCorDestaque] = useState("#ec4899"); // default pink
 
   const openEdit = (banner: any) => {
     setEditId(banner.id);
@@ -1367,6 +1431,9 @@ function BannersPanel({ token }: { token: string }) {
     setImageUrl(banner.image_url || "");
     setButtonText(banner.button_text || "Ver Looks");
     setButtonLink(banner.button_link || "#looks");
+    setButton2Text(banner.button2_text || "");
+    setButton2Link(banner.button2_link || "");
+    setCorDestaque(banner.cor_destaque || "#ec4899");
     setModalOpen(true);
   };
 
@@ -1379,6 +1446,9 @@ function BannersPanel({ token }: { token: string }) {
     setImageUrl("");
     setButtonText("Ver Looks");
     setButtonLink("#looks");
+    setButton2Text("");
+    setButton2Link("");
+    setCorDestaque("#ec4899");
     setModalOpen(true);
   };
 
@@ -1406,7 +1476,10 @@ function BannersPanel({ token }: { token: string }) {
       subtitle: subtitle,
       image_url: imageUrl,
       button_text: buttonText,
-      button_link: buttonLink
+      button_link: buttonLink,
+      button2_text: button2Text,
+      button2_link: button2Link,
+      cor_destaque: corDestaque
     });
   };
 
@@ -1495,6 +1568,25 @@ function BannersPanel({ token }: { token: string }) {
                 <div>
                   <label className="mb-1 block text-sm font-semibold">Link do Botão 1</label>
                   <input value={buttonLink} onChange={e => setButtonLink(e.target.value)} placeholder="#looks" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">Texto do Botão 2 (Opcional)</label>
+                  <input value={button2Text} onChange={e => setButton2Text(e.target.value)} placeholder="Ver Mais" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">Link do Botão 2 (Opcional)</label>
+                  <input value={button2Link} onChange={e => setButton2Link(e.target.value)} placeholder="/produtos" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold">Cor de Destaque</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={corDestaque} onChange={e => setCorDestaque(e.target.value)} className="h-10 w-20 cursor-pointer rounded-xl border-none outline-none" />
+                  <span className="text-sm text-muted-foreground">Essa cor substituirá o rosa neste banner (botões, luzes, etc).</span>
                 </div>
               </div>
 
