@@ -5,7 +5,7 @@ import { Footer } from "../components/Footer";
 import { CartDrawer } from "../components/CartDrawer";
 import { ProductCard } from "../components/ProductCard";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProdutos, fetchCategorias, fetchBanners, fetchConfiguracoes } from "../lib/api";
+import { fetchProdutos, fetchCategorias, fetchBanners, fetchConfiguracoes, fetchDestaques } from "../lib/api";
 import { useState, useEffect } from "react";
 import type { Product } from "../lib/products";
 
@@ -62,6 +62,11 @@ function Storefront() {
   const { data: config } = useQuery({
     queryKey: ["configuracoes_public"],
     queryFn: () => fetchConfiguracoes(),
+  });
+
+  const { data: destaques = [] } = useQuery({
+    queryKey: ["destaques"],
+    queryFn: fetchDestaques,
   });
 
   const activeBanners = (Array.isArray(banners) ? banners : []).filter((b: any) => b?.ativo);
@@ -195,6 +200,30 @@ function Storefront() {
           </div>
         </div>
       </section>
+
+      {/* Seção de Destaques */}
+      {destaques.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Seleção especial</p>
+            <h2 className="mt-2 font-display text-3xl sm:text-4xl">
+              {config?.titulo_destaques || "✨ Destaques da Semana"}
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {destaques.map((p: any) => (
+              <div key={p.id} className="group relative">
+                <div className="absolute -top-2 -right-2 z-10">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-yellow-400 shadow-md text-sm">
+                    ⭐
+                  </span>
+                </div>
+                <ProductCard product={p} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Looks */}
       <div id="novidades" className="absolute -translate-y-24" />

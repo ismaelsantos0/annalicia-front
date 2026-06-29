@@ -372,3 +372,36 @@ export async function deleteBanner(token: string, id: string) {
   if (!res.ok) throw new Error("Falha ao deletar banner");
   return true;
 }
+
+export async function toggleDestaqueProduto(token: string, id: string) {
+  const res = await fetch(`${API_URL}/produtos/${id}/destaque`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Falha ao alterar destaque");
+  return res.json();
+}
+
+export async function fetchDestaques() {
+  const res = await fetch(`${API_URL}/produtos/destaques`);
+  if (!res.ok) throw new Error("Falha ao buscar destaques");
+  const data = await res.json();
+  return data.map((p: any) => {
+    let parsedImages = [];
+    try {
+      const parsed = JSON.parse(p.imagem_url);
+      parsedImages = Array.isArray(parsed) ? parsed : [p.imagem_url];
+    } catch {
+      parsedImages = p.imagem_url ? [p.imagem_url] : [];
+    }
+    return {
+      id: p.id,
+      name: p.nome,
+      price: p.preco,
+      category: p.categoria ? p.categoria.nome : "Geral",
+      images: parsedImages,
+      stock: p.estoque,
+      destaque: p.destaque,
+    };
+  });
+}

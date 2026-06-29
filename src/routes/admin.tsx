@@ -22,10 +22,11 @@ import {
   Image as ImageIcon,
   MousePointerClick,
   MonitorSmartphone,
-  PieChart
+  PieChart,
+  Star
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats, enviarDisparo } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats, enviarDisparo, toggleDestaqueProduto } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -286,6 +287,12 @@ function ProductsPanel({ token }: { token: string }) {
     onError: (e) => alert(e.message)
   });
 
+  const toggleDestaqueMutation = useMutation({
+    mutationFn: (id: string) => toggleDestaqueProduto(token, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["produtos"] }),
+    onError: (e) => alert(e.message)
+  });
+
   return (
     <>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -312,6 +319,7 @@ function ProductsPanel({ token }: { token: string }) {
                 <th className="px-6 py-3 font-semibold">Preço</th>
                 <th className="px-6 py-3 font-semibold">Categoria</th>
                 <th className="px-6 py-3 font-semibold">Estoque</th>
+                <th className="px-6 py-3 font-semibold text-center" title="Destaque">⭐</th>
                 <th className="px-6 py-3 font-semibold"></th>
               </tr>
             </thead>
@@ -334,6 +342,15 @@ function ProductsPanel({ token }: { token: string }) {
                     <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${p.stock < 10 ? "bg-pink-100 text-primary" : "bg-mint text-emerald-700"}`}>
                       {p.stock} un.
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button
+                      onClick={() => toggleDestaqueMutation.mutate(p.id)}
+                      title={p.destaque ? "Remover destaque" : "Marcar como destaque"}
+                      className={`transition-transform hover:scale-125 ${p.destaque ? "text-yellow-400" : "text-gray-300 hover:text-yellow-400"}`}
+                    >
+                      <Star className="h-5 w-5" fill={p.destaque ? "currentColor" : "none"} />
+                    </button>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
@@ -965,6 +982,10 @@ function ConfiguracoesPanel({ token }: { token: string }) {
   const [popupBotaoLink, setPopupBotaoLink] = useState("");
   const [textoFrete, setTextoFrete] = useState("Frete grátis acima de R$ 199");
   const [textoBrinde, setTextoBrinde] = useState("Brinde fofo no pedido");
+  const [tituloDestaques, setTituloDestaques] = useState("✨ Destaques da Semana");
+  const [categoriaDestaqueId, setCategoriaDestaqueId] = useState("");
+
+  const { data: categorias = [] } = useQuery({ queryKey: ["categorias"], queryFn: fetchCategorias });
 
   const { data: config, isLoading } = useQuery({
     queryKey: ["configuracoes"],
@@ -985,6 +1006,8 @@ function ConfiguracoesPanel({ token }: { token: string }) {
     if (config.popup_botao_link && config.popup_botao_link !== popupBotaoLink) setPopupBotaoLink(config.popup_botao_link);
     if (config.texto_frete && config.texto_frete !== textoFrete) setTextoFrete(config.texto_frete);
     if (config.texto_brinde && config.texto_brinde !== textoBrinde) setTextoBrinde(config.texto_brinde);
+    if (config.titulo_destaques && config.titulo_destaques !== tituloDestaques) setTituloDestaques(config.titulo_destaques);
+    if (config.categoria_destaque_id && config.categoria_destaque_id !== categoriaDestaqueId) setCategoriaDestaqueId(config.categoria_destaque_id);
   }
 
   const mutation = useMutation({
@@ -1001,7 +1024,9 @@ function ConfiguracoesPanel({ token }: { token: string }) {
       popup_botao_texto: popupBotaoTexto,
       popup_botao_link: popupBotaoLink,
       texto_frete: textoFrete,
-      texto_brinde: textoBrinde
+      texto_brinde: textoBrinde,
+      titulo_destaques: tituloDestaques,
+      categoria_destaque_id: categoriaDestaqueId || null
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["configuracoes"] });
@@ -1108,6 +1133,39 @@ function ConfiguracoesPanel({ token }: { token: string }) {
                   placeholder="Ex: Brinde fofo no pedido"
                   className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
                 />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-pink-50 space-y-4">
+              <h3 className="text-lg font-display text-pink-900 flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-400" fill="currentColor" /> Seção de Destaques
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-primary">Título da Seção</label>
+                  <input
+                    type="text"
+                    value={tituloDestaques}
+                    onChange={e => setTituloDestaques(e.target.value)}
+                    placeholder="Ex: ✨ Destaques da Semana"
+                    className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">Este título aparece no topo da seção de destaques na loja.</p>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-primary">Categoria em Destaque</label>
+                  <select
+                    value={categoriaDestaqueId}
+                    onChange={e => setCategoriaDestaqueId(e.target.value)}
+                    className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary bg-transparent"
+                  >
+                    <option value="">Nenhuma (apenas produtos ⭐ marcados)</option>
+                    {categorias.map((cat: any) => (
+                      <option key={cat.id} value={cat.id}>{cat.nome}</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-muted-foreground">Todos os produtos desta categoria também entrarão nos destaques automaticamente.</p>
+                </div>
               </div>
             </div>
 
