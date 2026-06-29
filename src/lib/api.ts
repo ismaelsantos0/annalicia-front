@@ -1,4 +1,4 @@
-﻿const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export async function fetchProdutos() {
   const res = await fetch(`${API_URL}/produtos`);
@@ -23,6 +23,8 @@ export async function fetchProdutos() {
       images: parsedImages,
       stock: p.estoque,
       isNew: index < 4,
+      destaque: p.destaque,
+      descricao: p.descricao,
     };
   });
 }
@@ -475,8 +477,8 @@ export async function fetchDestaques() {
 }
 
 export async function verifyToken(token: string) {
-  const res = await fetch($(${API_URL})/auth/me, {
-    headers: { Authorization: Bearer $(${token}) }
+  const res = await fetch(`${API_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` }
   });
   if (res.status === 401) window.dispatchEvent(new Event('unauthorized'));
   if (!res.ok) throw new Error('Token inválido');
