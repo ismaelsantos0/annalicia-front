@@ -195,10 +195,10 @@ export async function loginAdmin(username: string, password: string) {
   return res.json();
 }
 
-export async function fetchConfiguracoes(token: string) {
-  const res = await fetch(`${API_URL}/configuracoes`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+export async function fetchConfiguracoes(token?: string) {
+  const headers: any = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_URL}/configuracoes`, { headers });
   if (!res.ok) throw new Error("Falha ao buscar configurações");
   return res.json();
 }

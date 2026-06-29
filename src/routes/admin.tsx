@@ -545,7 +545,7 @@ function OrdersPanel({ token }: { token: string }) {
                 <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Nenhum pedido ainda.</td></tr>
               ) : orders.map((o: any) => (
                 <tr key={o.id} className="border-t border-pink-50 hover:bg-pink-50/40">
-                  <td className="px-6 py-4 font-mono text-xs">{o.id}</td>
+                  <td className="px-6 py-4 font-mono text-xs">#{o.numero ? String(o.numero).padStart(4, '0') : o.id.split('-')[0]}</td>
                   <td className="px-6 py-4 font-display">{o.cliente?.nome}</td>
                   <td className="px-6 py-4 text-muted-foreground">{o.cliente?.whatsapp}</td>
                   <td className="px-6 py-4 font-semibold text-primary">{formatBRL(o.total)}</td>
@@ -826,21 +826,24 @@ function ConfiguracoesPanel({ token }: { token: string }) {
   const queryClient = useQueryClient();
   const [critico, setCritico] = useState("1");
   const [atencao, setAtencao] = useState("3");
+  const [whatsappLoja, setWhatsappLoja] = useState("");
 
   const { data: config, isLoading } = useQuery({
     queryKey: ["configuracoes"],
     queryFn: () => fetchConfiguracoes(token),
   });
 
-  if (config && config.estoque_critico.toString() !== critico && !isLoading && !queryClient.isMutating()) {
-    setCritico(config.estoque_critico.toString());
-    setAtencao(config.estoque_atencao.toString());
+  if (config && !isLoading && !queryClient.isMutating()) {
+    if (config.estoque_critico.toString() !== critico) setCritico(config.estoque_critico.toString());
+    if (config.estoque_atencao.toString() !== atencao) setAtencao(config.estoque_atencao.toString());
+    if (config.whatsapp_loja && config.whatsapp_loja !== whatsappLoja) setWhatsappLoja(config.whatsapp_loja);
   }
 
   const mutation = useMutation({
     mutationFn: () => updateConfiguracoes(token, {
       estoque_critico: parseInt(critico, 10),
-      estoque_atencao: parseInt(atencao, 10)
+      estoque_atencao: parseInt(atencao, 10),
+      whatsapp_loja: whatsappLoja.replace(/\D/g, "")
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["configuracoes"] });
@@ -890,6 +893,18 @@ function ConfiguracoesPanel({ token }: { token: string }) {
                 className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-yellow-400"
               />
               <p className="mt-1 text-xs text-muted-foreground">Estoque ficará amarelo se for igual ou menor que este valor, mas maior que o crítico.</p>
+            </div>
+
+            <div className="pt-4 border-t border-pink-50">
+              <label className="mb-1 block text-sm font-semibold text-primary">WhatsApp da Loja</label>
+              <input
+                type="tel"
+                value={whatsappLoja}
+                onChange={e => setWhatsappLoja(e.target.value)}
+                placeholder="(95) 99999-9999"
+                className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Número (com DDD) que receberá os comprovantes de PIX. Apenas números.</p>
             </div>
 
             <button 

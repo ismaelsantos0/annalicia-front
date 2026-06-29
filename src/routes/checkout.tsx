@@ -59,6 +59,11 @@ function CheckoutPage() {
     queryFn: fetchZonasEntrega,
   });
 
+  const { data: config } = useQuery({
+    queryKey: ["configuracoes_public"],
+    queryFn: () => fetchConfiguracoes(),
+  });
+
   // Calculate matching zone and delivery fee
   const currentZone = zonas.find((z: any) => z.bairro.toLowerCase() === bairro.toLowerCase());
   const deliveryFee = deliveryType === "entrega" ? (currentZone?.taxa || 0) : 0;
@@ -139,7 +144,7 @@ function CheckoutPage() {
         <div className="w-full max-w-lg bg-background rounded-3xl shadow-xl overflow-hidden p-8 text-center flex flex-col items-center">
           <h2 className="font-display text-3xl mb-2 text-primary">Pedido confirmado 💖</h2>
           <p className="text-sm text-muted-foreground mb-8">
-            Recebemos seu pedido <span className="font-mono">#{successData.id.split('-')[0]}</span>.
+            Recebemos seu pedido <span className="font-mono">#{successData.numero ? String(successData.numero).padStart(4, '0') : successData.id.split('-')[0]}</span>.
           </p>
 
           <div className="w-full rounded-2xl bg-yellow-50 border border-yellow-200 p-6 text-left mb-8 shadow-sm">
@@ -177,7 +182,7 @@ function CheckoutPage() {
             Copie o código acima e realize o pagamento no seu banco.
           </p>
           <a
-            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_LOJA || "5595991475736"}?text=${encodeURIComponent(`Olá! Acabei de fazer o pagamento do pedido #${successData.id.split('-')[0]}. Segue o comprovante:`)}`}
+            href={`https://wa.me/${config?.whatsapp_loja || "5595991475736"}?text=${encodeURIComponent(`Olá! Acabei de fazer o pagamento do pedido #${successData.numero ? String(successData.numero).padStart(4, '0') : successData.id.split('-')[0]}. Segue o comprovante:`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-full bg-green-500 w-full py-4 text-sm font-semibold text-white shadow-md hover:bg-green-600 transition-colors flex items-center justify-center gap-2 mb-4"
