@@ -917,6 +917,29 @@ function ConfiguracoesPanel({ token }: { token: string }) {
               <p className="mt-1 text-xs text-muted-foreground">Número (com DDD) que receberá os comprovantes de PIX. Apenas números.</p>
             </div>
 
+            <div className="pt-4 border-t border-pink-50 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-primary">Link do Instagram</label>
+                <input
+                  type="url"
+                  value={linkInstagram}
+                  onChange={e => setLinkInstagram(e.target.value)}
+                  placeholder="https://instagram.com/sua.loja"
+                  className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-primary">Link do TikTok</label>
+                <input
+                  type="url"
+                  value={linkTiktok}
+                  onChange={e => setLinkTiktok(e.target.value)}
+                  placeholder="https://tiktok.com/@sua.loja"
+                  className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
             <button 
               type="submit"
               disabled={mutation.isPending}
@@ -1062,7 +1085,6 @@ function PagamentosPanel({ token }: { token: string }) {
     },
     onError: (e) => alert(e.message)
   });
-
   // Zonas de Entrega
   const { data: zonas = [], isLoading: loadingZonas } = useQuery({
     queryKey: ["zonas-entrega"],
