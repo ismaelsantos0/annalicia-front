@@ -302,8 +302,8 @@ function ProductsPanel({ token }: { token: string }) {
                         canvas.height = height;
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // JPEG 85% para qualidade excelente
-                        const base64 = canvas.toDataURL("image/jpeg", 0.85);
+                        // WebP 85% para máxima compressão e qualidade excelente
+                        const base64 = canvas.toDataURL("image/webp", 0.85);
                         setImagem(base64);
                       };
                     };
