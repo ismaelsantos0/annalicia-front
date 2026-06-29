@@ -642,6 +642,25 @@ function MarketingPanel({ token }: { token: string }) {
   const [mensagem, setMensagem] = useState("");
   const [enviando, setEnviando] = useState(false);
 
+  const apagarBase = async () => {
+    if (!confirm("Tem certeza que deseja apagar TODOS os clientes e TODOS os pedidos? Essa ação não tem volta!")) return;
+    try {
+      setEnviando(true);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/clientes/todos`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Falha ao apagar base");
+      alert("Base apagada com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      queryClient.invalidateQueries({ queryKey: ["pedidos"] });
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   const handleDisparo = async () => {
     if (!mensagem.trim()) return;
     try {
@@ -664,7 +683,17 @@ function MarketingPanel({ token }: { token: string }) {
       </div>
 
       <div className="mb-8 overflow-hidden rounded-3xl bg-white p-6 shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
-        <h2 className="mb-4 font-display text-xl">Nova Campanha (WhatsApp)</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-display text-xl">Nova Campanha (WhatsApp)</h2>
+          <button
+            onClick={apagarBase}
+            disabled={enviando}
+            className="text-xs font-semibold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
+          >
+            <Trash2 className="h-3 w-3" />
+            Zerar Base
+          </button>
+        </div>
         <textarea
           value={mensagem}
           onChange={(e) => setMensagem(e.target.value)}
@@ -991,7 +1020,7 @@ function ConfiguracoesPanel({ token }: { token: string }) {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-3xl bg-white p-6 shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
-          <h2 className="font-display text-xl">Níveis de Alerta de Estoque</h2>
+          <h2 className="font-display text-xl mb-6">Níveis de Alerta de Estoque</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Defina quando o sistema deve classificar o estoque de um produto como crítico ou merecedor de atenção.
           </p>
