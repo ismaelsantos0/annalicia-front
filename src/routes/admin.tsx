@@ -44,6 +44,47 @@ function isIOS(): boolean {
   return false;
 }
 
+const getCroppedImg = async (imageSrc: string, pixelCrop: any) => {
+  const image = new Image();
+  image.src = imageSrc;
+  await new Promise((resolve) => (image.onload = resolve));
+  
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+  
+  const MAX_SIZE = 1200;
+  let width = pixelCrop.width;
+  let height = pixelCrop.height;
+  
+  if (width > height) {
+    if (width > MAX_SIZE) {
+      height *= MAX_SIZE / width;
+      width = MAX_SIZE;
+    }
+  } else {
+    if (height > MAX_SIZE) {
+      width *= MAX_SIZE / height;
+      height = MAX_SIZE;
+    }
+  }
+  
+  canvas.width = width;
+  canvas.height = height;
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    width,
+    height
+  );
+  
+  return canvas.toDataURL("image/webp", 0.85);
+};
+
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [{ title: "Painel Admin — Annalicia Modas" }],
@@ -295,49 +336,6 @@ function ProductsPanel({ token }: { token: string }) {
     },
     onError: (e) => alert(e.message)
   });
-
-  const getCroppedImg = async (imageSrc: string, pixelCrop: any) => {
-    const image = new Image();
-    image.src = imageSrc;
-    await new Promise((resolve) => (image.onload = resolve));
-    
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d")!;
-    
-    const MAX_SIZE = 1200;
-    let width = pixelCrop.width;
-    let height = pixelCrop.height;
-    
-    if (width > height) {
-      if (width > MAX_SIZE) {
-        height *= MAX_SIZE / width;
-        width = MAX_SIZE;
-      }
-    } else {
-      if (height > MAX_SIZE) {
-        width *= MAX_SIZE / height;
-        height = MAX_SIZE;
-      }
-    }
-    
-    canvas.width = width;
-    canvas.height = height;
-    ctx.drawImage(
-      image,
-      pixelCrop.x,
-      pixelCrop.y,
-      pixelCrop.width,
-      pixelCrop.height,
-      0,
-      0,
-      width,
-      height
-    );
-    
-    return canvas.toDataURL("image/webp", 0.85);
-  };
-
-
 
   const deleteProdMutation = useMutation({
     mutationFn: (id: string) => deleteProduto(token, id),
@@ -1752,6 +1750,13 @@ function BannersPanel({ token }: { token: string }) {
   const [button2Link, setButton2Link] = useState("");
   const [corDestaque, setCorDestaque] = useState("#ec4899"); // default pink
 
+  // Crop states for banner
+  const [cropOpen, setCropOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+
   const openEdit = (banner: any) => {
     setEditId(banner.id);
     setBadgeText(banner.badge_text || "");
@@ -1886,8 +1891,38 @@ function BannersPanel({ token }: { token: string }) {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-semibold">URL da Imagem (Recomendado 1200x1500)</label>
-                <input required type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                <label className="mb-1 block text-sm font-semibold">Imagem do Banner (Recomendado 1200x1500)</label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = (event) => {
+                      setImageToCrop(event.target?.result as string);
+                      setCropOpen(true);
+                      e.target.value = "";
+                    };
+                  }}
+                  className="w-full rounded-xl border border-border p-2 text-sm outline-none file:mr-4 file:rounded-full file:border-0 file:bg-primary/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/30" 
+                />
+                
+                {imageUrl && (
+                  <div className="mt-4 flex gap-2">
+                    <div className="relative h-40 w-32 flex-shrink-0">
+                      <img src={imageUrl} className="h-full w-full rounded-xl object-cover shadow-sm" />
+                      <button 
+                        type="button"
+                        onClick={() => setImageUrl("")}
+                        className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1924,6 +1959,44 @@ function BannersPanel({ token }: { token: string }) {
                 {saveMutation.isPending ? "Salvando..." : "Salvar Banner"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {cropOpen && imageToCrop && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <div className="flex h-full w-full max-w-lg flex-col rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-xl text-primary">Recortar Banner</h2>
+              <button onClick={() => setCropOpen(false)} className="rounded-full bg-pink-50 p-2 text-primary hover:bg-pink-100">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="relative flex-1 rounded-xl bg-black/5 overflow-hidden">
+              <Cropper
+                image={imageToCrop}
+                crop={crop}
+                zoom={zoom}
+                aspect={4 / 5}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(_, croppedPixels) => setCroppedAreaPixels(croppedPixels)}
+              />
+            </div>
+            
+            <button 
+              type="button"
+              onClick={async () => {
+                const cropped = await getCroppedImg(imageToCrop, croppedAreaPixels);
+                setImageUrl(cropped);
+                setCropOpen(false);
+                setImageToCrop(null);
+              }}
+              className="mt-6 w-full rounded-full bg-primary py-3.5 font-semibold text-white transition hover:opacity-90"
+            >
+              Confirmar Recorte
+            </button>
           </div>
         </div>
       )}
