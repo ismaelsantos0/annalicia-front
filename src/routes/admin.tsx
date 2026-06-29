@@ -37,13 +37,14 @@ export const Route = createFileRoute("/admin")({
   component: AdminDashboard,
 });
 
-type Tab = "dashboard" | "catalogo" | "pedidos" | "marketing" | "configuracoes";
+type Tab = "dashboard" | "catalogo" | "pedidos" | "marketing" | "destaques" | "configuracoes";
 
 const navItems = [
   { id: "dashboard" as Tab, label: "Dashboard", icon: PieChart },
   { id: "catalogo" as Tab, label: "Catálogo", icon: Shirt },
   { id: "pedidos" as Tab, label: "Pedidos", icon: Receipt },
   { id: "marketing" as Tab, label: "Marketing", icon: Megaphone },
+  { id: "destaques" as Tab, label: "Destaques", icon: Star },
   { id: "configuracoes" as Tab, label: "Configurações", icon: Settings },
 ];
 
@@ -164,6 +165,8 @@ function AdminDashboard() {
           <OrdersPanel token={token} />
         ) : tab === "marketing" ? (
           <MarketingTabs token={token} />
+        ) : tab === "destaques" ? (
+          <DestaquesPanel token={token} />
         ) : tab === "configuracoes" ? (
           <ConfiguracoesTabs token={token} />
         ) : (
@@ -1951,6 +1954,184 @@ function ConfiguracoesTabs({ token }: { token: string }) {
       {subTab === "geral" && <ConfiguracoesPanel token={token} />}
       {subTab === "pagamentos" && <PagamentosPanel token={token} />}
       {subTab === "whatsapp" && <WhatsAppPanel token={token} />}
+    </>
+  );
+}
+
+function DestaquesPanel({ token }: { token: string }) {
+  const queryClient = useQueryClient();
+  const [tituloDestaques, setTituloDestaques] = useState("✨ Destaques da Semana");
+  const [categoriaDestaqueId, setCategoriaDestaqueId] = useState("");
+  const [busca, setBusca] = useState("");
+
+  const { data: config } = useQuery({
+    queryKey: ["configuracoes"],
+    queryFn: () => fetchConfiguracoes(token),
+  });
+
+  const { data: categorias = [] } = useQuery({
+    queryKey: ["categorias"],
+    queryFn: fetchCategorias,
+  });
+
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ["produtos"],
+    queryFn: fetchProdutos,
+  });
+
+  // Sincroniza config quando carregado
+  if (config && tituloDestaques === "✨ Destaques da Semana" && config.titulo_destaques) {
+    setTituloDestaques(config.titulo_destaques);
+  }
+  if (config && !categoriaDestaqueId && config.categoria_destaque_id) {
+    setCategoriaDestaqueId(config.categoria_destaque_id);
+  }
+
+  const saveMutation = useMutation({
+    mutationFn: () => updateConfiguracoes(token, {
+      titulo_destaques: tituloDestaques,
+      categoria_destaque_id: categoriaDestaqueId || null,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["configuracoes"] });
+      alert("Configurações de destaque salvas!");
+    },
+    onError: (e) => alert(e.message),
+  });
+
+  const toggleDestaqueMutation = useMutation({
+    mutationFn: (id: string) => toggleDestaqueProduto(token, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["produtos"] });
+      queryClient.invalidateQueries({ queryKey: ["destaques"] });
+    },
+    onError: (e) => alert(e.message),
+  });
+
+  const produtosFiltrados = (products as any[]).filter((p: any) =>
+    p.name.toLowerCase().includes(busca.toLowerCase()) ||
+    p.category.toLowerCase().includes(busca.toLowerCase())
+  );
+
+  const destaqueCount = (products as any[]).filter((p: any) => p.destaque).length;
+
+  return (
+    <>
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Vitrine</p>
+        <h1 className="mt-1 font-display text-3xl sm:text-4xl">Seção de Destaques</h1>
+      </div>
+
+      {/* Config Card */}
+      <div className="mb-6 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-pink-100">
+        <h2 className="mb-4 font-display text-xl flex items-center gap-2">
+          <Star className="h-5 w-5 text-yellow-400" fill="currentColor" />
+          Configurar Seção
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-primary">Título da Seção</label>
+            <input
+              type="text"
+              value={tituloDestaques}
+              onChange={e => setTituloDestaques(e.target.value)}
+              placeholder="Ex: ✨ Destaques da Semana"
+              className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">Aparece como título no site. Pode usar emojis!</p>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-primary">Categoria em Destaque</label>
+            <select
+              value={categoriaDestaqueId}
+              onChange={e => setCategoriaDestaqueId(e.target.value)}
+              className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary bg-white"
+            >
+              <option value="">Nenhuma (apenas produtos ⭐ marcados)</option>
+              {(categorias as any[]).map((cat: any) => (
+                <option key={cat.id} value={cat.id}>{cat.nome}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">Todos os produtos desta categoria entram nos destaques automaticamente.</p>
+          </div>
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-bold text-primary">{destaqueCount}</span> produto{destaqueCount !== 1 ? "s" : ""} com ⭐ marcado{destaqueCount !== 1 ? "s" : ""} individualmente
+          </p>
+          <button
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending}
+            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-pink-500/20 transition hover:bg-pink-600 hover:scale-105 disabled:opacity-50"
+          >
+            {saveMutation.isPending ? "Salvando..." : "Salvar Configurações"}
+          </button>
+        </div>
+      </div>
+
+      {/* Produtos */}
+      <div className="rounded-3xl bg-white shadow-sm ring-1 ring-pink-100 overflow-hidden">
+        <div className="p-6 border-b border-pink-50 flex items-center justify-between gap-4">
+          <h2 className="font-display text-xl">Marcar Produtos</h2>
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar produto..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              className="w-full rounded-full border border-pink-100 bg-pink-50/40 py-2 pl-9 pr-4 text-sm outline-none focus:border-primary"
+            />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-pink-50/50 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <tr>
+                <th className="px-6 py-3">Foto</th>
+                <th className="px-6 py-3">Nome</th>
+                <th className="px-6 py-3">Categoria</th>
+                <th className="px-6 py-3">Preço</th>
+                <th className="px-6 py-3 text-center">Destaque ⭐</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
+              ) : produtosFiltrados.length === 0 ? (
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Nenhum produto encontrado.</td></tr>
+              ) : produtosFiltrados.map((p: any) => (
+                <tr key={p.id} className={`border-t border-pink-50 transition-colors ${p.destaque ? "bg-yellow-50/40" : "hover:bg-pink-50/30"}`}>
+                  <td className="px-6 py-3">
+                    <img src={p.images?.[0] || ""} alt={p.name} className="h-12 w-10 rounded-xl object-cover bg-pink-50" />
+                  </td>
+                  <td className="px-6 py-3 font-display text-base">{p.name}</td>
+                  <td className="px-6 py-3">
+                    <span className="inline-flex items-center rounded-full bg-pink-100/50 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                      {p.category}
+                    </span>
+                  </td>
+                  <td className="px-6 py-3 font-semibold text-primary">{formatBRL(p.price)}</td>
+                  <td className="px-6 py-3 text-center">
+                    <button
+                      onClick={() => toggleDestaqueMutation.mutate(p.id)}
+                      disabled={toggleDestaqueMutation.isPending}
+                      title={p.destaque ? "Remover destaque" : "Marcar como destaque"}
+                      className={`mx-auto flex h-10 w-10 items-center justify-center rounded-full transition-all hover:scale-110 ${
+                        p.destaque
+                          ? "bg-yellow-100 text-yellow-500 shadow-sm"
+                          : "bg-gray-100 text-gray-400 hover:bg-yellow-50 hover:text-yellow-400"
+                      }`}
+                    >
+                      <Star className="h-5 w-5" fill={p.destaque ? "currentColor" : "none"} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </>
   );
 }
