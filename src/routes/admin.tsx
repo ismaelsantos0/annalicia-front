@@ -912,7 +912,7 @@ function WhatsAppPanel({ token }: { token: string }) {
     }
   });
 
-  const { data: qrData, isLoading: isLoadingQr } = useQuery({
+  const { data: qrData, isLoading: isLoadingQr, error: qrError } = useQuery({
     queryKey: ["whatsapp_qrcode"],
     queryFn: () => fetchWhatsAppQRCode(token),
     enabled: statusData?.status !== "open",
@@ -979,6 +979,8 @@ function WhatsAppPanel({ token }: { token: string }) {
               <div className="mx-auto mb-4 flex min-h-[256px] w-64 items-center justify-center rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 p-2">
                 {isLoadingQr ? (
                   <p className="text-sm text-muted-foreground">Gerando QR Code...</p>
+                ) : qrError ? (
+                  <p className="text-sm text-muted-foreground text-red-500 font-semibold p-4 text-center">{qrError.message}</p>
                 ) : qrData?.base64 ? (
                   <img src={qrData.base64} alt="WhatsApp QR Code" className="w-full h-full object-contain mix-blend-multiply" />
                 ) : (
