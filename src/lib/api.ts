@@ -400,9 +400,20 @@ export async function deleteBanner(token: string, id: string) {
 export async function toggleDestaqueProduto(token: string, id: string) {
   const res = await fetch(`${API_URL}/produtos/${id}/destaque`, {
     method: "PATCH",
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}` 
+    },
+    body: JSON.stringify({})
   });
-  if (!res.ok) throw new Error("Falha ao alterar destaque");
+  if (!res.ok) {
+    let msg = "Falha ao alterar destaque";
+    try {
+      const err = await res.json();
+      msg = err.detail || msg;
+    } catch (e) {}
+    throw new Error(msg);
+  }
   return res.json();
 }
 
