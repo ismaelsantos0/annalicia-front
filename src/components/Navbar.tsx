@@ -24,12 +24,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link
-            to="/admin"
-            className="hidden rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-pink-50 hover:text-primary sm:inline-block"
-          >
-            Painel Admin
-          </Link>
+
           <button
             onClick={openCart}
             aria-label="Abrir sacola"
@@ -49,7 +44,7 @@ export function Navbar() {
         <Link to="/">Início</Link>
         <a href="#looks">Looks</a>
         <a href="#novidades">Novidades</a>
-        <Link to="/admin">Admin</Link>
+
       </nav>
     </header>
   );

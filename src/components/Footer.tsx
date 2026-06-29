@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Instagram, Music2, Heart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchConfiguracoes } from "../lib/api";
@@ -39,7 +40,7 @@ export function Footer() {
           )}
         </div>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          Feito com <Heart className="h-3 w-3 fill-primary text-primary" /> ©{" "}
+          Feito com <Link to="/admin"><Heart className="h-3 w-3 fill-primary text-primary cursor-default hover:opacity-50" /></Link> ©{" "}
           {new Date().getFullYear()} Annalicia Modas
         </p>
       </div>
