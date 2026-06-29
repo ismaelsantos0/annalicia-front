@@ -351,6 +351,7 @@ function Field({
   hint,
   inputMode,
   multiline,
+  readonly,
 }: {
   icon: React.ReactNode;
   label: string;
