@@ -194,7 +194,7 @@ function ProductsPanel({ token }: { token: string }) {
       nome,
       preco: parseFloat(preco.replace(",", ".")),
       estoque: parseInt(estoque, 10),
-      categoria_id: categoriaId || undefined,
+      categoria_id: (categoriaId && categoriaId !== "new") ? categoriaId : undefined,
       imagem_url: imagens.length > 0 ? JSON.stringify(imagens) : "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
     }),
     onSuccess: () => {
