@@ -15,6 +15,7 @@ import {
   Trash2,
   Settings,
   MessageCircle,
+  CreditCard,
 } from "lucide-react";
 import Cropper from "react-easy-crop";
 import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp } from "../lib/api";
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminDashboard,
 });
 
-type Tab = "produtos" | "categorias" | "estoque" | "pedidos" | "marketing" | "configuracoes" | "whatsapp";
+type Tab = "produtos" | "categorias" | "estoque" | "pedidos" | "marketing" | "configuracoes" | "whatsapp" | "pagamentos";
 
 const navItems = [
   { id: "produtos" as Tab, label: "Produtos", icon: Shirt },
@@ -37,6 +38,7 @@ const navItems = [
   { id: "pedidos" as Tab, label: "Pedidos", icon: Receipt },
   { id: "marketing" as Tab, label: "Marketing", icon: Megaphone },
   { id: "whatsapp" as Tab, label: "WhatsApp", icon: MessageCircle },
+  { id: "pagamentos" as Tab, label: "Pagamentos", icon: CreditCard },
   { id: "configuracoes" as Tab, label: "Configurações", icon: Settings },
 ];
 
@@ -163,6 +165,8 @@ function AdminDashboard() {
           <ConfiguracoesPanel token={token} />
         ) : tab === "whatsapp" ? (
           <WhatsAppPanel token={token} />
+        ) : tab === "pagamentos" ? (
+          <PagamentosPanel token={token} />
         ) : (
           <ProductsPanel token={token} />
         )}
@@ -994,6 +998,136 @@ function WhatsAppPanel({ token }: { token: string }) {
             </div>
           )}
         </div>
+      </div>
+    </>
+  );
+}
+
+function PagamentosPanel({ token }: { token: string }) {
+  const queryClient = useQueryClient();
+  const [pixChave, setPixChave] = useState("");
+  const [pixTipo, setPixTipo] = useState("");
+  const [pixNome, setPixNome] = useState("");
+  const [pixCidade, setPixCidade] = useState("");
+
+  const { data: config, isLoading } = useQuery({
+    queryKey: ["configuracoes"],
+    queryFn: () => fetchConfiguracoes(token),
+  });
+
+  if (config && !isLoading && !queryClient.isMutating()) {
+    if (pixChave === "" && config.pix_chave) setPixChave(config.pix_chave);
+    if (pixTipo === "" && config.pix_tipo) setPixTipo(config.pix_tipo);
+    if (pixNome === "" && config.pix_nome_recebedor) setPixNome(config.pix_nome_recebedor);
+    if (pixCidade === "" && config.pix_cidade_recebedor) setPixCidade(config.pix_cidade_recebedor);
+  }
+
+  const mutation = useMutation({
+    mutationFn: () => updateConfiguracoes(token, {
+      pix_chave: pixChave,
+      pix_tipo: pixTipo,
+      pix_nome_recebedor: pixNome,
+      pix_cidade_recebedor: pixCidade
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["configuracoes"] });
+      alert("Configurações de Pagamento salvas com sucesso!");
+    },
+    onError: (e) => alert(e.message)
+  });
+
+  return (
+    <>
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Financeiro</p>
+        <h1 className="mt-1 font-display text-3xl sm:text-4xl">Pagamentos (PIX)</h1>
+      </div>
+
+      <div className="mb-6 rounded-2xl bg-yellow-50 border border-yellow-200 p-4">
+        <div className="flex gap-3">
+          <div className="mt-1 font-semibold text-yellow-600">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-yellow-800">Pagamentos 100% via PIX</h3>
+            <p className="mt-1 text-sm text-yellow-700">
+              O sistema gera um código "Copia e Cola" válido com o valor exato do pedido utilizando a sua chave PIX configurada abaixo. 
+              <br/> A integração com <b>Mercado Pago</b> para baixa automática do pedido está prevista para as próximas atualizações!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl rounded-3xl bg-white p-6 sm:p-8 shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
+        <h2 className="font-display text-xl mb-6">Configurar Chave Recebedora</h2>
+        
+        <form 
+          onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground/80">Tipo da Chave</label>
+              <select 
+                value={pixTipo} 
+                onChange={e => setPixTipo(e.target.value)} 
+                className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary bg-transparent"
+              >
+                <option value="">Selecione...</option>
+                <option value="cpf">CPF</option>
+                <option value="cnpj">CNPJ</option>
+                <option value="email">E-mail</option>
+                <option value="telefone">Telefone (com DDD)</option>
+                <option value="aleatoria">Chave Aleatória</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground/80">Chave PIX</label>
+              <input
+                type="text"
+                value={pixChave}
+                onChange={e => setPixChave(e.target.value)}
+                placeholder="Ex: 123.456.789-00"
+                className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground/80">Nome do Titular/Loja</label>
+              <input
+                type="text"
+                value={pixNome}
+                onChange={e => setPixNome(e.target.value)}
+                placeholder="Ex: Annalicia Modas"
+                maxLength={25}
+                className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+              />
+            </div>
+            
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground/80">Cidade do Titular</label>
+              <input
+                type="text"
+                value={pixCidade}
+                onChange={e => setPixCidade(e.target.value)}
+                placeholder="Ex: Sao Paulo"
+                maxLength={15}
+                className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <button 
+            type="submit"
+            disabled={mutation.isPending}
+            className="mt-6 w-full rounded-full bg-primary py-3.5 font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-50"
+          >
+            {mutation.isPending ? "Salvando..." : "Salvar Configurações PIX"}
+          </button>
+        </form>
       </div>
     </>
   );

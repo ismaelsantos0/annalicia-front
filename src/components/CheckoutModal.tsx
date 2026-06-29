@@ -22,7 +22,7 @@ export function CheckoutModal({ open, onClose }: Props) {
     mutationFn: createPedido,
     onSuccess: (data) => {
       items.forEach((i) => updateQuantity(i.id, 0));
-      setSuccess(data.id);
+      setSuccessData(data);
     },
     onError: (error) => {
       alert(error.message);
@@ -32,7 +32,7 @@ export function CheckoutModal({ open, onClose }: Props) {
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [address, setAddress] = useState("");
-  const [success, setSuccess] = useState<string | null>(null);
+  const [successData, setSuccessData] = useState<any | null>(null);
   const [errors, setErrors] = useState<{
     name?: string;
     whatsapp?: string;
@@ -61,7 +61,7 @@ export function CheckoutModal({ open, onClose }: Props) {
   }
 
   function handleClose() {
-    setSuccess(null);
+    setSuccessData(null);
     setName("");
     setWhatsapp("");
     setAddress("");
@@ -74,7 +74,7 @@ export function CheckoutModal({ open, onClose }: Props) {
       <div className="relative w-full max-w-lg overflow-hidden rounded-t-3xl bg-background shadow-2xl sm:rounded-3xl">
         <div className="flex items-center justify-between border-b border-pink-100 px-6 py-4">
           <h2 className="font-display text-xl">
-            {success ? "Pedido confirmado 💖" : "Finalizar pedido"}
+            {successData ? "Pedido confirmado 💖" : "Finalizar pedido"}
           </h2>
           <button
             onClick={handleClose}
@@ -85,15 +85,39 @@ export function CheckoutModal({ open, onClose }: Props) {
           </button>
         </div>
 
-        {success ? (
-          <div className="px-6 py-8 text-center">
+        {successData ? (
+          <div className="px-6 py-8 text-center flex flex-col items-center">
             <p className="text-sm text-muted-foreground">
-              Recebemos seu pedido <span className="font-mono">{success}</span>.
-              Em instantes você receberá a confirmação no seu WhatsApp.
+              Recebemos seu pedido <span className="font-mono">#{successData.id.split('-')[0]}</span>.
+            </p>
+            <div className="my-6 w-full rounded-2xl bg-yellow-50 border border-yellow-200 p-4 text-left">
+              <h3 className="font-semibold text-yellow-800 text-sm mb-2">Finalize seu pagamento:</h3>
+              <p className="text-xs text-yellow-700 mb-3">Copie o código abaixo e pague no seu aplicativo do banco via <b>PIX Copia e Cola</b>. O pedido será processado assim que for aprovado.</p>
+              
+              <div className="relative">
+                <textarea 
+                  readOnly 
+                  value={successData.pix_copia_cola} 
+                  className="w-full text-xs font-mono p-3 rounded-xl bg-white border border-yellow-200 outline-none resize-none break-all"
+                  rows={4}
+                />
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(successData.pix_copia_cola);
+                    alert("Código PIX copiado!");
+                  }}
+                  className="absolute right-2 bottom-2 bg-yellow-200 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full hover:bg-yellow-300"
+                >
+                  Copiar
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mb-6">
+              Em instantes você receberá os detalhes no seu WhatsApp.
             </p>
             <button
               onClick={handleClose}
-              className="mt-6 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              className="mt-2 rounded-full bg-primary w-full py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90 shadow-md"
             >
               Continuar comprando
             </button>
