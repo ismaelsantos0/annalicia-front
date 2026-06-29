@@ -93,7 +93,6 @@ function Storefront() {
 
   return (
     <div className="min-h-screen">
-      {config && <PromoPopup config={config} />}
       <Navbar />
       <CartDrawer />
 
