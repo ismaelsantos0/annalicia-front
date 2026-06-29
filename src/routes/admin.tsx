@@ -12,8 +12,9 @@ import {
   Megaphone,
   Send,
   Users,
+  X,
 } from "lucide-react";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -149,17 +150,43 @@ function AdminDashboard() {
         ) : tab === "marketing" ? (
           <MarketingPanel token={token} />
         ) : (
-          <ProductsPanel />
+          <ProductsPanel token={token} />
         )}
       </main>
     </div>
   );
 }
 
-function ProductsPanel() {
+function ProductsPanel({ token }: { token: string }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [nome, setNome] = useState("");
+  const [preco, setPreco] = useState("");
+  const [estoque, setEstoque] = useState("");
+  const [imagem, setImagem] = useState("");
+
+  const queryClient = useQueryClient();
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["produtos"],
     queryFn: fetchProdutos,
+  });
+
+  const mutation = useMutation({
+    mutationFn: () => createProduto(token, {
+      nome,
+      preco: parseFloat(preco.replace(",", ".")),
+      estoque: parseInt(estoque, 10),
+      imagem_url: imagem || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["produtos"] });
+      setModalOpen(false);
+      setNome("");
+      setPreco("");
+      setEstoque("");
+      setImagem("");
+      alert("Produto salvo com sucesso!");
+    },
+    onError: (e) => alert(e.message)
   });
 
   return (
@@ -169,7 +196,10 @@ function ProductsPanel() {
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Dashboard</p>
           <h1 className="mt-1 font-display text-3xl sm:text-4xl">Gestão de Peças</h1>
         </div>
-        <button className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_25px_-10px_rgba(236,72,153,0.55)] transition hover:scale-105">
+        <button 
+          onClick={() => setModalOpen(true)}
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_25px_-10px_rgba(236,72,153,0.55)] transition hover:scale-105"
+        >
           <Plus className="h-4 w-4" />
           Adicionar Nova Peça
         </button>
@@ -207,6 +237,42 @@ function ProductsPanel() {
           </table>
         </div>
       </div>
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="font-display text-xl text-primary">Nova Peça ✨</h2>
+              <button onClick={() => setModalOpen(false)} className="rounded-full bg-pink-50 p-2 text-primary hover:bg-pink-100">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground/80">Nome da Peça</label>
+                <input required value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Cropped Rosa" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Preço (R$)</label>
+                  <input required type="number" step="0.01" value={preco} onChange={e => setPreco(e.target.value)} placeholder="0.00" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Estoque</label>
+                  <input required type="number" value={estoque} onChange={e => setEstoque(e.target.value)} placeholder="0" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground/80">Link da Imagem (Opcional)</label>
+                <input value={imagem} onChange={e => setImagem(e.target.value)} placeholder="https://..." className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+              </div>
+              <button disabled={mutation.isPending} type="submit" className="mt-4 w-full rounded-full bg-primary py-3 font-semibold text-white shadow-lg transition hover:opacity-90">
+                {mutation.isPending ? "Salvando..." : "Salvar Peça"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

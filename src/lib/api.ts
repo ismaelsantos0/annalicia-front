@@ -14,6 +14,27 @@ export async function fetchProdutos() {
   }));
 }
 
+export async function createProduto(token: string, dados: {
+  nome: string;
+  preco: number;
+  estoque: number;
+  imagem_url: string;
+}) {
+  const res = await fetch(`${API_URL}/produtos`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Falha ao criar produto");
+  }
+  return res.json();
+}
+
 export async function createPedido(dados: {
   cliente_nome: string;
   cliente_whatsapp: string;
