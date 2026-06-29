@@ -263,8 +263,61 @@ function ProductsPanel({ token }: { token: string }) {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground/80">Link da Imagem (Opcional)</label>
-                <input value={imagem} onChange={e => setImagem(e.target.value)} placeholder="https://..." className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                <label className="mb-1 block text-sm font-medium text-foreground/80">Imagem da Peça</label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    
+                    // Comprimir e converter para Base64
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = (event) => {
+                      const img = new Image();
+                      img.src = event.target?.result as string;
+                      img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        const ctx = canvas.getContext("2d")!;
+                        
+                        // Regra de exibição: max 1200px para manter alta resolução sem pesar o banco
+                        const MAX_SIZE = 1200;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > height) {
+                          if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                          }
+                        } else {
+                          if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                          }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // JPEG 85% para qualidade excelente
+                        const base64 = canvas.toDataURL("image/jpeg", 0.85);
+                        setImagem(base64);
+                      };
+                    };
+                  }}
+                  className="w-full rounded-xl border border-pink-100 p-2 text-sm outline-none file:mr-4 file:rounded-full file:border-0 file:bg-pink-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-pink-100" 
+                />
+                <div className="mt-2 text-center text-xs text-muted-foreground">Ou cole um link direto:</div>
+                <input value={imagem} onChange={e => setImagem(e.target.value)} placeholder="https://..." className="mt-1 w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                
+                {imagem && (
+                  <div className="mt-4 flex justify-center">
+                    <img src={imagem} alt="Preview" className="h-32 w-24 rounded-xl object-cover shadow-sm" />
+                  </div>
+                )}
               </div>
               <button disabled={mutation.isPending} type="submit" className="mt-4 w-full rounded-full bg-primary py-3 font-semibold text-white shadow-lg transition hover:opacity-90">
                 {mutation.isPending ? "Salvando..." : "Salvar Peça"}
