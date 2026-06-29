@@ -25,7 +25,7 @@ import {
   PieChart
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, updateOrderStatus, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats, enviarDisparo } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -633,11 +633,47 @@ function MarketingPanel({ token }: { token: string }) {
     queryFn: () => fetchClientes(token),
   });
 
+  const [mensagem, setMensagem] = useState("");
+  const [enviando, setEnviando] = useState(false);
+
+  const handleDisparo = async () => {
+    if (!mensagem.trim()) return;
+    try {
+      setEnviando(true);
+      await enviarDisparo(token, mensagem);
+      alert("Disparo iniciado com sucesso! As mensagens estão sendo enviadas em segundo plano.");
+      setMensagem("");
+    } catch (err: any) {
+      alert(err.message || "Falha ao iniciar disparo");
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   return (
     <>
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">Engajamento</p>
         <h1 className="mt-1 font-display text-3xl sm:text-4xl">Marketing & Disparos</h1>
+      </div>
+
+      <div className="mb-8 overflow-hidden rounded-3xl bg-white p-6 shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
+        <h2 className="mb-4 font-display text-xl">Nova Campanha (WhatsApp)</h2>
+        <textarea
+          value={mensagem}
+          onChange={(e) => setMensagem(e.target.value)}
+          placeholder="Digite a mensagem promocional. Ex: 'Olá! Temos novidades na Annalicia Modas!'"
+          className="min-h-[120px] w-full resize-y rounded-xl border border-pink-100 bg-pink-50/30 p-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+        />
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={handleDisparo}
+            disabled={enviando || !mensagem.trim()}
+            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-pink-500/20 transition hover:bg-pink-600 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+          >
+            {enviando ? "Iniciando..." : "Enviar Disparo em Massa"}
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-3xl bg-white shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">

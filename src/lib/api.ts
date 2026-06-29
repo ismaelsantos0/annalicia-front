@@ -175,6 +175,22 @@ export async function fetchClientes(token: string) {
   return res.json();
 }
 
+export async function enviarDisparo(token: string, mensagem: string) {
+  const res = await fetch(`${API_URL}/clientes/disparo`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ mensagem })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || "Falha ao iniciar disparo");
+  }
+  return res.json();
+}
+
 export async function fetchPedidosAdmin(token: string) {
   const res = await fetch(`${API_URL}/pedidos`, {
     headers: { Authorization: `Bearer ${token}` }
