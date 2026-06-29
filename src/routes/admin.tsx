@@ -928,6 +928,8 @@ function ConfiguracoesPanel({ token }: { token: string }) {
   const [popupImagem, setPopupImagem] = useState("");
   const [popupBotaoTexto, setPopupBotaoTexto] = useState("");
   const [popupBotaoLink, setPopupBotaoLink] = useState("");
+  const [textoFrete, setTextoFrete] = useState("Frete grátis acima de R$ 199");
+  const [textoBrinde, setTextoBrinde] = useState("Brinde fofo no pedido");
 
   const { data: config, isLoading } = useQuery({
     queryKey: ["configuracoes"],
@@ -946,6 +948,8 @@ function ConfiguracoesPanel({ token }: { token: string }) {
     if (config.popup_imagem && config.popup_imagem !== popupImagem) setPopupImagem(config.popup_imagem);
     if (config.popup_botao_texto && config.popup_botao_texto !== popupBotaoTexto) setPopupBotaoTexto(config.popup_botao_texto);
     if (config.popup_botao_link && config.popup_botao_link !== popupBotaoLink) setPopupBotaoLink(config.popup_botao_link);
+    if (config.texto_frete && config.texto_frete !== textoFrete) setTextoFrete(config.texto_frete);
+    if (config.texto_brinde && config.texto_brinde !== textoBrinde) setTextoBrinde(config.texto_brinde);
   }
 
   const mutation = useMutation({
@@ -960,7 +964,9 @@ function ConfiguracoesPanel({ token }: { token: string }) {
       popup_texto: popupTexto,
       popup_imagem: popupImagem,
       popup_botao_texto: popupBotaoTexto,
-      popup_botao_link: popupBotaoLink
+      popup_botao_link: popupBotaoLink,
+      texto_frete: textoFrete,
+      texto_brinde: textoBrinde
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["configuracoes"] });
@@ -1042,6 +1048,29 @@ function ConfiguracoesPanel({ token }: { token: string }) {
                   value={linkTiktok}
                   onChange={e => setLinkTiktok(e.target.value)}
                   placeholder="https://tiktok.com/@sua.loja"
+                  className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-pink-50 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-primary">Texto Destaque (Esquerda)</label>
+                <input
+                  type="text"
+                  value={textoFrete}
+                  onChange={e => setTextoFrete(e.target.value)}
+                  placeholder="Ex: Frete grátis acima de R$ 199"
+                  className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-primary">Texto Destaque (Direita)</label>
+                <input
+                  type="text"
+                  value={textoBrinde}
+                  onChange={e => setTextoBrinde(e.target.value)}
+                  placeholder="Ex: Brinde fofo no pedido"
                   className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary"
                 />
               </div>

@@ -170,10 +170,10 @@ function Storefront() {
 
             <div className="mt-10 flex flex-wrap gap-6 text-xs text-muted-foreground">
               <span className="flex items-center gap-2">
-                <Truck className="h-4 w-4 text-primary" /> Frete grátis acima de R$ 199
+                <Truck className="h-4 w-4 text-primary" /> {config?.texto_frete || "Frete grátis acima de R$ 199"}
               </span>
               <span className="flex items-center gap-2">
-                <Gift className="h-4 w-4 text-primary" /> Brinde fofo no pedido
+                <Gift className="h-4 w-4 text-primary" /> {config?.texto_brinde || "Brinde fofo no pedido"}
               </span>
             </div>
           </div>
