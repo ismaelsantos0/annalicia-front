@@ -19,10 +19,13 @@ import {
   X,
   Minus,
   Check,
-  ImageIcon
+  Image as ImageIcon,
+  MousePointerClick,
+  MonitorSmartphone,
+  PieChart
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes, fetchWhatsAppStatus, fetchWhatsAppQRCode, logoutWhatsApp, importFromInstagram, fetchZonasEntrega, createZonaEntrega, updateZonaEntrega, deleteZonaEntrega, seedBoaVista, fetchBanners, createBanner, updateBanner, deleteBanner, fetchDashboardStats } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -33,14 +36,16 @@ export const Route = createFileRoute("/admin")({
   component: AdminDashboard,
 });
 
-type Tab = "produtos" | "categorias" | "estoque" | "pedidos" | "marketing" | "configuracoes" | "whatsapp" | "pagamentos";
+type Tab = "dashboard" | "produtos" | "categorias" | "estoque" | "pedidos" | "marketing" | "configuracoes" | "whatsapp" | "pagamentos" | "banners";
 
 const navItems = [
+  { id: "dashboard" as Tab, label: "Dashboard", icon: PieChart },
   { id: "produtos" as Tab, label: "Produtos", icon: Shirt },
   { id: "categorias" as Tab, label: "Categorias", icon: Boxes },
   { id: "estoque" as Tab, label: "Estoque", icon: Boxes },
   { id: "pedidos" as Tab, label: "Pedidos", icon: Receipt },
   { id: "marketing" as Tab, label: "Marketing", icon: Megaphone },
+  { id: "banners" as Tab, label: "Banners", icon: ImageIcon },
   { id: "whatsapp" as Tab, label: "WhatsApp", icon: MessageCircle },
   { id: "pagamentos" as Tab, label: "Pagamentos", icon: CreditCard },
   { id: "configuracoes" as Tab, label: "Configurações", icon: Settings },
@@ -55,7 +60,7 @@ function AdminDashboard() {
   });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [tab, setTab] = useState<Tab>("produtos");
+  const [tab, setTab] = useState<Tab>("dashboard");
 
   const loginMutation = useMutation({
     mutationFn: () => loginAdmin(username, password),
@@ -163,7 +168,9 @@ function AdminDashboard() {
       </aside>
 
       <main className="flex-1 px-4 py-8 sm:px-8">
-        {tab === "pedidos" ? (
+        {tab === "dashboard" ? (
+          <DashboardPanel token={token} />
+        ) : tab === "pedidos" ? (
           <OrdersPanel token={token} />
         ) : tab === "marketing" ? (
           <MarketingPanel token={token} />
@@ -190,6 +197,7 @@ function AdminDashboard() {
 function ProductsPanel({ token }: { token: string }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [nome, setNome] = useState("");
+  const [precoCusto, setPrecoCusto] = useState("");
   const [preco, setPreco] = useState("");
   const [estoque, setEstoque] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
@@ -217,6 +225,7 @@ function ProductsPanel({ token }: { token: string }) {
   const mutation = useMutation({
     mutationFn: () => createProduto(token, {
       nome,
+      preco_custo: parseFloat(precoCusto.replace(",", ".") || "0"),
       preco: parseFloat(preco.replace(",", ".")),
       estoque: parseInt(estoque, 10),
       categoria_id: (categoriaId && categoriaId !== "new") ? categoriaId : undefined,
@@ -226,6 +235,7 @@ function ProductsPanel({ token }: { token: string }) {
       queryClient.invalidateQueries({ queryKey: ["produtos"] });
       setModalOpen(false);
       setNome("");
+      setPrecoCusto("");
       setPreco("");
       setEstoque("");
       setImagens([]);
@@ -380,9 +390,13 @@ function ProductsPanel({ token }: { token: string }) {
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Nome da Peça</label>
                 <input required value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Cropped Rosa" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground/80">Preço (R$)</label>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Preço de Custo (R$)</label>
+                  <input type="number" step="0.01" value={precoCusto} onChange={e => setPrecoCusto(e.target.value)} placeholder="0.00" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Preço de Venda (R$)</label>
                   <input required type="number" step="0.01" value={preco} onChange={e => setPreco(e.target.value)} placeholder="0.00" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
                 </div>
                 <div>
@@ -390,6 +404,23 @@ function ProductsPanel({ token }: { token: string }) {
                   <input required type="number" value={estoque} onChange={e => setEstoque(e.target.value)} placeholder="0" className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-primary" />
                 </div>
               </div>
+              
+              {parseFloat(preco) > 0 && parseFloat(precoCusto) > 0 && (
+                <div className="rounded-xl bg-green-50 p-3 border border-green-100 text-sm flex gap-6">
+                  <div>
+                    <span className="block text-green-700/70 mb-0.5 text-xs">Lucro Bruto</span>
+                    <span className="font-semibold text-green-700">
+                      R$ {(parseFloat(preco) - parseFloat(precoCusto)).toFixed(2)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-green-700/70 mb-0.5 text-xs">Margem (Markup)</span>
+                    <span className="font-semibold text-green-700">
+                      {(((parseFloat(preco) - parseFloat(precoCusto)) / parseFloat(precoCusto)) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Categoria</label>
                 <div className="flex gap-2">
@@ -1597,6 +1628,71 @@ function BannersPanel({ token }: { token: string }) {
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+function DashboardPanel({ token }: { token: string }) {
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["dashboard_stats"],
+    queryFn: () => fetchDashboardStats(token),
+  });
+
+  if (isLoading) return <div className="text-muted-foreground p-8">Carregando dashboard...</div>;
+
+  const faturamento = stats?.faturamento_total || 0;
+  const custo = stats?.custo_total || 0;
+  const lucro = stats?.lucro_bruto || 0;
+  const margem = custo > 0 ? (lucro / custo) * 100 : 0;
+
+  return (
+    <>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-2xl text-primary">Dashboard de Vendas</h2>
+          <p className="text-sm text-muted-foreground">Visão geral do faturamento e margem de lucro.</p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-2xl border border-pink-100 bg-white p-6 shadow-sm">
+          <div className="text-sm font-semibold text-muted-foreground">Faturamento Total</div>
+          <div className="mt-2 text-3xl font-display text-gray-900">
+            R$ {faturamento.toFixed(2)}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-pink-100 bg-white p-6 shadow-sm">
+          <div className="text-sm font-semibold text-muted-foreground">Custo de Mercadorias</div>
+          <div className="mt-2 text-3xl font-display text-red-500">
+            - R$ {custo.toFixed(2)}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-pink-100 bg-green-50 p-6 shadow-sm">
+          <div className="text-sm font-semibold text-green-700/80">Lucro Bruto</div>
+          <div className="mt-2 text-3xl font-display text-green-600">
+            R$ {lucro.toFixed(2)}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-pink-100 bg-white p-6 shadow-sm">
+          <div className="text-sm font-semibold text-muted-foreground">Margem Média (Markup)</div>
+          <div className="mt-2 text-3xl font-display text-primary">
+            {margem.toFixed(1)}%
+          </div>
+        </div>
+        
+        <div className="rounded-2xl border border-pink-100 bg-white p-6 shadow-sm sm:col-span-2 lg:col-span-4 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-pink-100 flex items-center justify-center text-primary">
+            <Receipt className="h-6 w-6" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-muted-foreground">Total de Pedidos</div>
+            <div className="text-2xl font-display text-gray-900">{stats?.total_pedidos || 0}</div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

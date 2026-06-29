@@ -15,6 +15,7 @@ export async function fetchProdutos() {
     return {
       id: p.id,
       name: p.nome,
+      preco_custo: p.preco_custo || 0,
       price: p.preco,
       category: p.categoria ? p.categoria.nome : "Geral",
       categoria_id: p.categoria_id,
@@ -24,8 +25,17 @@ export async function fetchProdutos() {
   });
 }
 
+export async function fetchDashboardStats(token: string) {
+  const res = await fetch(`${API_URL}/pedidos/dashboard/stats`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Falha ao buscar estatísticas");
+  return res.json();
+}
+
 export async function createProduto(token: string, dados: {
   nome: string;
+  preco_custo: number;
   preco: number;
   estoque: number;
   imagem_url: string;
