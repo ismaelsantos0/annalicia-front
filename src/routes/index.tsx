@@ -304,7 +304,7 @@ function Storefront() {
             ))}
           </div>
         )}
-        <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+        <CartDrawer />
         <NotificationBubble />
       </section>
 
