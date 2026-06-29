@@ -12,11 +12,11 @@ import {
   Megaphone,
   Send,
   Users,
-  X,
   Trash2,
+  Settings,
 } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto } from "../lib/api";
+import { fetchProdutos, fetchClientes, fetchPedidosAdmin, loginAdmin, createProduto, deleteProduto, fetchCategorias, createCategoria, deleteCategoria, updateEstoqueProduto, fetchConfiguracoes, updateConfiguracoes } from "../lib/api";
 import { formatBRL } from "../lib/products";
 import { formatWhatsApp } from "../lib/whatsapp";
 
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminDashboard,
 });
 
-type Tab = "produtos" | "categorias" | "estoque" | "pedidos" | "marketing";
+type Tab = "produtos" | "categorias" | "estoque" | "pedidos" | "marketing" | "configuracoes";
 
 const navItems = [
   { id: "produtos" as Tab, label: "Produtos", icon: Shirt },
@@ -35,6 +35,7 @@ const navItems = [
   { id: "estoque" as Tab, label: "Estoque", icon: Boxes },
   { id: "pedidos" as Tab, label: "Pedidos", icon: Receipt },
   { id: "marketing" as Tab, label: "Marketing", icon: Megaphone },
+  { id: "configuracoes" as Tab, label: "Configurações", icon: Settings },
 ];
 
 function AdminDashboard() {
@@ -156,6 +157,8 @@ function AdminDashboard() {
           <CategoriasPanel token={token} />
         ) : tab === "estoque" ? (
           <EstoquePanel token={token} />
+        ) : tab === "configuracoes" ? (
+          <ConfiguracoesPanel token={token} />
         ) : (
           <ProductsPanel token={token} />
         )}
@@ -692,6 +695,11 @@ function EstoquePanel({ token }: { token: string }) {
     queryFn: fetchProdutos,
   });
 
+  const { data: config } = useQuery({
+    queryKey: ["configuracoes"],
+    queryFn: () => fetchConfiguracoes(token),
+  });
+
   const mutation = useMutation({
     mutationFn: ({ id, estoque }: { id: string; estoque: number }) => updateEstoqueProduto(token, id, estoque),
     onSuccess: () => {
@@ -712,6 +720,9 @@ function EstoquePanel({ token }: { token: string }) {
     }
   };
 
+  const critico = config?.estoque_critico ?? 1;
+  const atencao = config?.estoque_atencao ?? 3;
+
   return (
     <>
       <div className="mb-8">
@@ -727,18 +738,26 @@ function EstoquePanel({ token }: { token: string }) {
                 <th className="px-6 py-3 font-semibold">Foto</th>
                 <th className="px-6 py-3 font-semibold">Produto</th>
                 <th className="px-6 py-3 font-semibold">Qtd. Atual</th>
+                <th className="px-6 py-3 font-semibold">Status</th>
                 <th className="px-6 py-3 font-semibold text-center">Ajuste Rápido</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Carregando...</td></tr>
               ) : products.length === 0 ? (
-                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Nenhum produto cadastrado.</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Nenhum produto cadastrado.</td></tr>
               ) : products.map((p: any) => {
                 let badgeClass = "bg-mint text-emerald-700";
-                if (p.stock <= 1) badgeClass = "bg-red-100 text-red-700";
-                else if (p.stock <= 3) badgeClass = "bg-yellow-100 text-yellow-700";
+                let statusText = "Seguro";
+                
+                if (p.stock <= critico) {
+                  badgeClass = "bg-red-100 text-red-700";
+                  statusText = "Crítico";
+                } else if (p.stock <= atencao) {
+                  badgeClass = "bg-yellow-100 text-yellow-700";
+                  statusText = "Atenção";
+                }
 
                 return (
                   <tr key={p.id} className="border-t border-pink-50 hover:bg-pink-50/40">
@@ -749,6 +768,11 @@ function EstoquePanel({ token }: { token: string }) {
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>
                         {p.stock} un.
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`text-xs font-bold uppercase tracking-wider ${badgeClass.replace('bg-', 'text-').replace('text-', '')}`}>
+                        {statusText}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -782,6 +806,90 @@ function EstoquePanel({ token }: { token: string }) {
               })}
             </tbody>
           </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ConfiguracoesPanel({ token }: { token: string }) {
+  const queryClient = useQueryClient();
+  const [critico, setCritico] = useState("1");
+  const [atencao, setAtencao] = useState("3");
+
+  const { data: config, isLoading } = useQuery({
+    queryKey: ["configuracoes"],
+    queryFn: () => fetchConfiguracoes(token),
+  });
+
+  if (config && config.estoque_critico.toString() !== critico && !isLoading && !queryClient.isMutating()) {
+    setCritico(config.estoque_critico.toString());
+    setAtencao(config.estoque_atencao.toString());
+  }
+
+  const mutation = useMutation({
+    mutationFn: () => updateConfiguracoes(token, {
+      estoque_critico: parseInt(critico, 10),
+      estoque_atencao: parseInt(atencao, 10)
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["configuracoes"] });
+      queryClient.invalidateQueries({ queryKey: ["produtos"] });
+      alert("Configurações salvas com sucesso!");
+    },
+    onError: (e) => alert(e.message)
+  });
+
+  return (
+    <>
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Sistema</p>
+        <h1 className="mt-1 font-display text-3xl sm:text-4xl">Configurações</h1>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="rounded-3xl bg-white p-6 shadow-[0_15px_40px_-25px_rgba(236,72,153,0.3)]">
+          <h2 className="font-display text-xl">Níveis de Alerta de Estoque</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Defina quando o sistema deve classificar o estoque de um produto como crítico ou merecedor de atenção.
+          </p>
+
+          <form 
+            onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }}
+            className="mt-6 space-y-4"
+          >
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-red-600">Estoque Crítico (<=)</label>
+              <input
+                type="number"
+                min="0"
+                value={critico}
+                onChange={e => setCritico(e.target.value)}
+                className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-red-400"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Estoque ficará vermelho se for igual ou menor que este valor.</p>
+            </div>
+            
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-yellow-600">Estoque Atenção (<=)</label>
+              <input
+                type="number"
+                min="0"
+                value={atencao}
+                onChange={e => setAtencao(e.target.value)}
+                className="w-full rounded-xl border border-pink-100 p-3 outline-none focus:border-yellow-400"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Estoque ficará amarelo se for igual ou menor que este valor, mas maior que o crítico.</p>
+            </div>
+
+            <button 
+              type="submit"
+              disabled={mutation.isPending}
+              className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-white transition hover:opacity-90"
+            >
+              {mutation.isPending ? "Salvando..." : "Salvar Configurações"}
+            </button>
+          </form>
         </div>
       </div>
     </>

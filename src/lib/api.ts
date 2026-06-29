@@ -154,3 +154,24 @@ export async function loginAdmin(username: string, password: string) {
   }
   return res.json();
 }
+
+export async function fetchConfiguracoes(token: string) {
+  const res = await fetch(`${API_URL}/configuracoes`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Falha ao buscar configurações");
+  return res.json();
+}
+
+export async function updateConfiguracoes(token: string, dados: { estoque_critico: number; estoque_atencao: number }) {
+  const res = await fetch(`${API_URL}/configuracoes`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) throw new Error("Falha ao atualizar configurações");
+  return res.json();
+}
