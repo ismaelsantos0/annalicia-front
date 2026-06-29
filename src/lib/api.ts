@@ -52,8 +52,8 @@ export async function fetchPedidosAdmin(token: string) {
 
 export async function loginAdmin(username: string, password: string) {
   const params = new URLSearchParams();
-  params.append("username", username);
-  params.append("password", password);
+  params.append("username", username.trim().toLowerCase());
+  params.append("password", password.trim());
   
   const res = await fetch(`${API_URL}/auth/token`, {
     method: "POST",
@@ -62,6 +62,13 @@ export async function loginAdmin(username: string, password: string) {
     },
     body: params.toString(),
   });
-  if (!res.ok) throw new Error("Credenciais inválidas");
+  if (!res.ok) {
+    let msg = "Credenciais inválidas";
+    try {
+      const err = await res.json();
+      msg = err.detail || msg;
+    } catch (e) {}
+    throw new Error(msg);
+  }
   return res.json();
 }
