@@ -34,7 +34,12 @@ const navItems = [
 ];
 
 function AdminDashboard() {
-  const [token, setToken] = useState<string | null>(localStorage.getItem("admin_token"));
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("admin_token");
+    }
+    return null;
+  });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [tab, setTab] = useState<Tab>("produtos");
