@@ -10,7 +10,7 @@ export function Footer() {
   });
 
   const nomeLoja = config?.nome_loja || "Annalicia Modas";
-  const [nomePrimeiro, ...nomeResto] = nomeLoja.split(" ");
+  const [nomePrimeiro, ...nomeResto] = String(nomeLoja).split(" ");
 
   return (
     <footer className="mt-24 border-t border-border bg-background">

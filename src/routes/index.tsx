@@ -58,7 +58,7 @@ function Storefront() {
   // Agrupar produtos com o mesmo nome para mostrar variações de cor
   const groupedProducts = Object.values(
     filteredProducts.reduce((acc: any, product) => {
-      const name = product.name?.trim() || "";
+      const name = String(product.name || "").trim();
       if (!acc[name]) {
         acc[name] = { ...product, variants: [product] };
       } else {

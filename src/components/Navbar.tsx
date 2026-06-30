@@ -12,7 +12,7 @@ export function Navbar() {
   });
 
   const nomeLoja = config?.nome_loja || "Annalicia Modas";
-  const [nomePrimeiro, ...nomeResto] = nomeLoja.split(" ");
+  const [nomePrimeiro, ...nomeResto] = String(nomeLoja).split(" ");
 
   return (
     <header className="sticky top-0 z-30 border-b border-pink-100 bg-background/85 backdrop-blur-md">
