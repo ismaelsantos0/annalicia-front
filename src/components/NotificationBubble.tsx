@@ -12,8 +12,12 @@ export function NotificationBubble() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem("annalicia_bubble_subscribed") || localStorage.getItem("annalicia_bubble_dismissed")) {
-      setDismissed(true);
+    try {
+      if (localStorage.getItem("annalicia_bubble_subscribed") || localStorage.getItem("annalicia_bubble_dismissed")) {
+        setDismissed(true);
+      }
+    } catch (e) {
+      // Ignore localStorage errors (e.g., in strict iOS WebViews)
     }
   }, []);
 
