@@ -9,8 +9,12 @@ export type Product = {
   isNew?: boolean;
 };
 
-export const formatBRL = (value: number) =>
-  value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+export const formatBRL = (value: number | undefined | null) => {
+  if (value === null || value === undefined || isNaN(Number(value))) {
+    return "R$ 0,00";
+  }
+  return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
 
 export const products: Product[] = [
   {
