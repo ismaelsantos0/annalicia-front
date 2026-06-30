@@ -196,7 +196,7 @@ function Storefront() {
             </div>
           </div>
           <div className="relative" key={`img-${currentBannerIndex}`}>
-            <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 blur-2xl animate-pulse" />
+            <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 blur-2xl" />
             <div className="relative overflow-hidden rounded-[2.5rem] shadow-xl animate-in fade-in zoom-in-95 duration-700">
               <img
                 src={currentBanner.image_url}
