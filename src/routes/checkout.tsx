@@ -65,10 +65,10 @@ function CheckoutPage() {
   });
 
   // Calculate matching zone and delivery fee
-  const currentZone = zonas.find((z: any) => z.bairro.toLowerCase() === bairro.toLowerCase());
+  const currentZone = zonas.find((z: any) => z?.bairro?.toLowerCase() === bairro?.toLowerCase());
   const deliveryFee = deliveryType === "entrega" ? (currentZone?.taxa || 0) : 0;
   const finalTotal = total + deliveryFee;
-  const isBairroUnknown = deliveryType === "entrega" && bairro && !currentZone;
+  const isBairroUnknown = deliveryType === "entrega" && !!bairro && !currentZone;
 
   async function handleCepSearch() {
     const cleanCep = cep.replace(/\D/g, "");
